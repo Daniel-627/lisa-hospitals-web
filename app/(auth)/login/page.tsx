@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authApi } from "@/lib/api";
 import { useAuthStore } from "@/lib/store";
+import Link from "next/link";
 
 export default function LoginPage() {
   const router   = useRouter();
@@ -115,9 +116,9 @@ export default function LoginPage() {
         </p>
 
         <div className="mt-6 pt-6 border-t text-center">
-          <a href="/" className="text-sm" style={{ color: "var(--grey-400)" }}>
+          <Link href="/" className="text-sm" style={{ color: "var(--grey-400)" }}>
             ← Back to website
-          </a>
+          </Link>
         </div>
       </div>
     </div>
