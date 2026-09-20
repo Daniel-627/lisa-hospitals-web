@@ -70,7 +70,7 @@ export default function PatientDashboard() {
           <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
             {profile?.firstName} {profile?.lastName}
           </span>
-          <UserButton afterSignOutUrl="/" />
+          <UserButton />
         </div>
       </nav>
 
