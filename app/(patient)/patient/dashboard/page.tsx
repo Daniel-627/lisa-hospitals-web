@@ -3,29 +3,32 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useAuth, UserButton } from "@clerk/nextjs";
 import { appointmentsApi, patientsApi } from "@/lib/api";
-import { useAuthStore } from "@/lib/store";
 
 export default function PatientDashboard() {
   const router = useRouter();
-  const { user, setUser, logout } = useAuthStore();
+  const { getToken, isLoaded, isSignedIn } = useAuth();
   const [appointments, setAppointments] = useState<any[]>([]);
   const [profile, setProfile]           = useState<any>(null);
   const [loading, setLoading]           = useState(true);
 
   useEffect(() => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) { router.push("/login"); return; }
+    if (!isLoaded) return;
+    if (!isSignedIn) { router.push("/login"); return; }
 
     const load = async () => {
       try {
+        // Get Clerk token and set in localStorage for axios interceptor
+        const token = await getToken();
+        if (token) localStorage.setItem("accessToken", token);
+
         const [apptRes, profileRes] = await Promise.all([
           appointmentsApi.getMine(),
           patientsApi.getProfile(),
         ]);
         setAppointments(apptRes.data.data);
         setProfile(profileRes.data.data);
-        setUser(profileRes.data.data);
       } catch {
         router.push("/login");
       } finally {
@@ -33,18 +36,13 @@ export default function PatientDashboard() {
       }
     };
     load();
-  }, [router, setUser]);
+  }, [router, isLoaded, isSignedIn, getToken]);
 
-  const handleLogout = () => {
-    logout();
-    router.push("/login");
-  };
-
-  if (loading) {
+  if (!isLoaded || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--white)" }}>
         <div className="text-center">
-          <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin mx-auto mb-3" style={{ borderColor: "var(--teal)", borderTopColor: "transparent" }}/>
+          <div className="w-10 h-10 rounded-full border-2 animate-spin mx-auto mb-3" style={{ borderColor: "var(--teal)", borderTopColor: "transparent" }}/>
           <p className="text-sm" style={{ color: "var(--grey-500)" }}>Loading your dashboard...</p>
         </div>
       </div>
@@ -72,9 +70,7 @@ export default function PatientDashboard() {
           <span className="text-sm" style={{ color: "rgba(255,255,255,0.6)" }}>
             {profile?.firstName} {profile?.lastName}
           </span>
-          <button onClick={handleLogout} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
-            Sign out
-          </button>
+          <UserButton afterSignOutUrl="/" />
         </div>
       </nav>
 
