@@ -14,10 +14,27 @@ const isPublicRoute = createRouteMatcher([
   "/api/webhook(.*)",
 ]);
 
+const isStaffRoute = createRouteMatcher([
+  "/staff/dashboard(.*)",
+  "/staff/patients(.*)",
+  "/staff/appointments(.*)",
+  "/staff/documents(.*)",
+  "/staff/billing(.*)",
+]);
+
 export default clerkMiddleware((auth, request) => {
-  if (!isPublicRoute(request)) {
-    auth.protect();
+  // Staff routes use custom JWT — skip Clerk protection
+  if (isStaffRoute(request)) {
+    return NextResponse.next();
   }
+
+  // Public routes — no auth needed
+  if (isPublicRoute(request)) {
+    return NextResponse.next();
+  }
+
+  // Everything else — protect with Clerk
+  auth.protect();
   return NextResponse.next();
 });
 
