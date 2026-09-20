@@ -12,6 +12,7 @@ const isPublicRoute = createRouteMatcher([
   "/contact(.*)",
   "/staff/login(.*)",
   "/api/webhook(.*)",
+  "/sso-callback(.*)",
 ]);
 
 const isStaffRoute = createRouteMatcher([
