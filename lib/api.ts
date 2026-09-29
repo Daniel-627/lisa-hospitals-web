@@ -58,11 +58,8 @@ api.interceptors.response.use(
 
 // Auth
 export const authApi = {
-  register: (data: any)  => api.post("/api/auth/register", data),
-  login:    (data: any)  => api.post("/api/auth/login", data),
-  refresh:  (data: any)  => api.post("/api/auth/refresh", data),
-  logout:   (data: any)  => api.post("/api/auth/logout", data),
-  me:       ()           => api.get("/api/auth/me"),
+  me:              ()          => api.get("/api/auth/me"),
+  completeProfile: (data: any) => api.post("/api/auth/complete-profile", data),
 };
 
 // Departments
