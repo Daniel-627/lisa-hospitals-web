@@ -14,7 +14,7 @@ export default function LoginPage() {
             colorBackground: "#ffffff",
           },
         }}
-        fallbackRedirectUrl="/patient/dashboard"
+        fallbackRedirectUrl="/auth/callback"
       />
     </div>
   );
