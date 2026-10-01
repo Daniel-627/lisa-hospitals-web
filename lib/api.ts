@@ -1,57 +1,34 @@
 import axios from "axios";
+import { getAuthToken } from "@/lib/tokenStore";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export const api = axios.create({
   baseURL: API_URL,
-  headers: {
-    "Content-Type": "application/json",
-  },
+  headers: { "Content-Type": "application/json" },
 });
 
-// Attach token to every request
-api.interceptors.request.use((config) => {
-  if (typeof window !== "undefined") {
-    const token = localStorage.getItem("accessToken");
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-  }
+// Clerk session tokens are short-lived (~60s). Ask Clerk for one on every request —
+// it caches and refreshes them itself, so this is cheap.
+api.interceptors.request.use(async (config) => {
+  const token = await getAuthToken();
+  if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-// Handle token refresh on 401
+// On a 401, retry once with a forced-fresh token. Pages decide where to redirect after that.
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
     const original = error.config;
-
-    if (error.response?.status === 401 && !original._retry) {
+    if (error.response?.status === 401 && original && !original._retry) {
       original._retry = true;
-
-      try {
-        const refreshToken = localStorage.getItem("refreshToken");
-        if (!refreshToken) {
-          window.location.href = "/login";
-          return Promise.reject(error);
-        }
-
-        const { data } = await axios.post(`${API_URL}/api/auth/refresh`, {
-          refreshToken,
-        });
-
-        localStorage.setItem("accessToken",  data.data.accessToken);
-        localStorage.setItem("refreshToken", data.data.refreshToken);
-
-        original.headers.Authorization = `Bearer ${data.data.accessToken}`;
+      const token = await getAuthToken({ skipCache: true });
+      if (token) {
+        original.headers.Authorization = `Bearer ${token}`;
         return api(original);
-      } catch {
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        window.location.href = "/login";
       }
     }
-
     return Promise.reject(error);
   }
 );
@@ -64,24 +41,25 @@ export const authApi = {
 
 // Departments
 export const departmentsApi = {
-  getAll:    ()           => api.get("/api/departments"),
-  getBySlug: (slug: string) => api.get(`/api/departments/${slug}`),
-  getDoctors:(slug: string) => api.get(`/api/departments/${slug}/doctors`),
+  getAll:     ()             => api.get("/api/departments"),
+  getBySlug:  (slug: string) => api.get(`/api/departments/${slug}`),
+  getDoctors: (slug: string) => api.get(`/api/departments/${slug}/doctors`),
 };
 
 // Doctors
 export const doctorsApi = {
-  getAll:           ()         => api.get("/api/doctors"),
-  getById:          (id: string) => api.get(`/api/doctors/${id}`),
-  getAvailability:  (id: string) => api.get(`/api/doctors/${id}/availability`),
+  getAll:          ()           => api.get("/api/doctors"),
+  getById:         (id: string) => api.get(`/api/doctors/${id}`),
+  getAvailability: (id: string) => api.get(`/api/doctors/${id}/availability`),
 };
 
 // Appointments
 export const appointmentsApi = {
-  create:       (data: any)   => api.post("/api/appointments", data),
-  getMine:      ()            => api.get("/api/appointments/mine"),
-  getById:      (id: string)  => api.get(`/api/appointments/${id}`),
-  cancel:       (id: string)  => api.patch(`/api/appointments/${id}/cancel`),
+  create:       (data: any)  => api.post("/api/appointments", data),
+  getMine:      ()           => api.get("/api/appointments/mine"),
+  getAll:       (params?: { status?: string; date?: string; limit?: number; offset?: number }) => api.get("/api/appointments/all", { params }),
+  getById:      (id: string) => api.get(`/api/appointments/${id}`),
+  cancel:       (id: string) => api.patch(`/api/appointments/${id}/cancel`),
   updateStatus: (id: string, status: string) => api.patch(`/api/appointments/${id}/status`, { status }),
 };
 
@@ -95,23 +73,23 @@ export const patientsApi = {
 
 // Staff
 export const staffApi = {
-  getDashboard:   ()         => api.get("/api/staff/dashboard"),
-  getPatients:    ()         => api.get("/api/staff/patients"),
+  getDashboard:   ()           => api.get("/api/staff/dashboard"),
+  getPatients:    (params?: { q?: string; limit?: number; offset?: number }) => api.get("/api/staff/patients", { params }),
   getPatientById: (id: string) => api.get(`/api/staff/patients/${id}`),
-  uploadDocument: (data: any) => api.post("/api/staff/documents", data),
+  uploadDocument: (data: any)  => api.post("/api/staff/documents", data),
 };
 
-// Billing
+// Billing (future phase — endpoints already exist)
 export const billingApi = {
-  getMyInvoices:     ()           => api.get("/api/billing/mine"),
-  getById:           (id: string) => api.get(`/api/billing/${id}`),
-  createInvoice:     (data: any)  => api.post("/api/billing", data),
-  recordPayment:     (id: string, data: any) => api.post(`/api/billing/${id}/payment`, data),
-  getPatientInvoices:(id: string) => api.get(`/api/billing/patient/${id}`),
+  getMyInvoices:      ()           => api.get("/api/billing/mine"),
+  getById:            (id: string) => api.get(`/api/billing/${id}`),
+  createInvoice:      (data: any)  => api.post("/api/billing", data),
+  recordPayment:      (id: string, data: any) => api.post(`/api/billing/${id}/payment`, data),
+  getPatientInvoices: (id: string) => api.get(`/api/billing/patient/${id}`),
 };
 
-// Sync
+// Sync (future phase — offline queue)
 export const syncApi = {
   push: (data: any) => api.post("/api/sync/push", data),
-  pull: (since?: string) => api.get(`/api/sync/pull${since ? `?since=${since}` : ""}`),
+  pull: (since?: string) => api.get("/api/sync/pull", { params: since ? { since } : undefined }),
 };
