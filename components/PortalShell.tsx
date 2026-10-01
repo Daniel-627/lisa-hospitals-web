@@ -54,7 +54,6 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     let cancelled = false;
     (async () => {
       try {
-        setError("");
         const { data } = await authApi.me();
         const u: Me = data.data;
         const isPatient = u.role === "patient";
@@ -80,7 +79,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
       <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--white)" }}>
         <div className="text-center">
           <p className="text-sm mb-4" style={{ color: "var(--grey-500)" }}>{error}</p>
-          <button onClick={() => setAttempt((n) => n + 1)} className="px-5 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>
+          <button onClick={() => { setError(""); setAttempt((n) => n + 1); }} className="px-5 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>
             Try again
           </button>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import PortalShell, { useMe } from "@/components/PortalShell";
 import { Card, ErrorBox, Spinner, StatusBadge, inputCls, inputStyle } from "@/components/ui";
@@ -28,48 +28,55 @@ function Manager() {
 
   const [date, setDate] = useState(todayLocal());
   const [status, setStatus] = useState("");
-  const [rows, setRows] = useState<any[] | null>(null);
-  const [error, setError] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [actionError, setActionError] = useState("");
 
-  const load = useCallback(async () => {
-    setRows(null);
-    setError("");
-    try {
-      const { data } = await appointmentsApi.getAll({ date: date || undefined, status: status || undefined, limit: 200 });
-      setRows(data.data);
-    } catch (err: any) {
-      setRows([]);
-      setError(err.response?.status === 403 ? "Your role doesn't have access to appointments." : errMsg(err, "Couldn't load appointments."));
-    }
-  }, [date, status]);
+  // Results remember which filters they were loaded for, so "loading" is derived (no setState in the effect).
+  const key = `${date}|${status}`;
+  const [result, setResult] = useState<{ key: string; rows: any[]; error: string } | null>(null);
+  const loading = !result || result.key !== key;
+  const rows = loading ? [] : result!.rows;
+  const error = actionError || (loading ? "" : result!.error);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    let cancelled = false;
+    appointmentsApi.getAll({ date: date || undefined, status: status || undefined, limit: 200 })
+      .then(({ data }) => { if (!cancelled) setResult({ key, rows: data.data, error: "" }); })
+      .catch((err) => {
+        if (cancelled) return;
+        const msg = err.response?.status === 403 ? "Your role doesn't have access to appointments." : errMsg(err, "Couldn't load appointments.");
+        setResult({ key, rows: [], error: msg });
+      });
+    return () => { cancelled = true; };
+  }, [key, date, status]);
 
   const change = async (id: string, a: Action) => {
     if (a.confirm && !window.confirm(a.confirm)) return;
     setBusyId(id);
-    setError("");
+    setActionError("");
     try {
       await appointmentsApi.updateStatus(id, a.to);
-      setRows((r) => r && r.map((x) => (x.id === id ? { ...x, status: a.to } : x)));
+      setResult((r) => r && { ...r, rows: r.rows.map((x) => (x.id === id ? { ...x, status: a.to } : x)) });
     } catch (err) {
-      setError(errMsg(err, "Couldn't update that appointment."));
+      setActionError(errMsg(err, "Couldn't update that appointment."));
     } finally {
       setBusyId(null);
     }
   };
+
+  const pickDate = (v: string) => { setActionError(""); setDate(v); };
+  const pickStatus = (v: string) => { setActionError(""); setStatus(v); };
 
   return (
     <>
       <div className="flex flex-wrap items-end gap-3 mb-6">
         <div>
           <label htmlFor="date" className="block text-xs font-medium mb-1" style={{ color: "var(--grey-500)" }}>Date</label>
-          <input id="date" type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} style={{ ...inputStyle, width: "auto" }} />
+          <input id="date" type="date" value={date} onChange={(e) => pickDate(e.target.value)} className={inputCls} style={{ ...inputStyle, width: "auto" }} />
         </div>
         <div>
           <label htmlFor="status" className="block text-xs font-medium mb-1" style={{ color: "var(--grey-500)" }}>Status</label>
-          <select id="status" value={status} onChange={(e) => setStatus(e.target.value)} className={inputCls} style={{ ...inputStyle, width: "auto" }}>
+          <select id="status" value={status} onChange={(e) => pickStatus(e.target.value)} className={inputCls} style={{ ...inputStyle, width: "auto" }}>
             <option value="">All</option>
             <option value="pending">Pending</option>
             <option value="confirmed">Confirmed</option>
@@ -78,12 +85,12 @@ function Manager() {
             <option value="no_show">No-show</option>
           </select>
         </div>
-        <button onClick={() => setDate(todayLocal())} className="px-4 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Today</button>
-        <button onClick={() => setDate("")} className="px-4 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>All dates</button>
+        <button onClick={() => pickDate(todayLocal())} className="px-4 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Today</button>
+        <button onClick={() => pickDate("")} className="px-4 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>All dates</button>
       </div>
 
       {error && <ErrorBox>{error}</ErrorBox>}
-      {rows === null ? <Spinner label="Loading appointments..." /> : rows.length === 0 && !error ? (
+      {loading ? <Spinner label="Loading appointments..." /> : rows.length === 0 && !error ? (
         <p className="text-sm py-10 text-center" style={{ color: "var(--grey-500)" }}>No appointments match these filters.</p>
       ) : (
         <div className="space-y-2">

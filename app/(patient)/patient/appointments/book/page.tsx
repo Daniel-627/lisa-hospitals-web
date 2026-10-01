@@ -20,7 +20,7 @@ export default function BookAppointmentPage() {
   const { isLoaded, isSignedIn } = useAuth();
   const [step, setStep] = useState(1);
   const [departments, setDepartments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,7 +34,6 @@ export default function BookAppointmentPage() {
 
     let cancelled = false;
     (async () => {
-      setLoading(true);
       try {
         const { data } = await departmentsApi.getAll();
         if (!cancelled) setDepartments(data.data);

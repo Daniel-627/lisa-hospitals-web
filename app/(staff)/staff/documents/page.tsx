@@ -32,14 +32,15 @@ function UploadForm() {
   }, [preId]);
 
   // Debounced patient search.
+  const term = search.trim();
+  const shown = term.length >= 2 ? results : [];
   useEffect(() => {
-    const term = search.trim();
-    if (term.length < 2) { setResults([]); return; }
+    if (term.length < 2) return;
     const t = setTimeout(() => {
       staffApi.getPatients({ q: term, limit: 6 }).then(({ data }) => setResults(data.data)).catch(() => setResults([]));
     }, 300);
     return () => clearTimeout(t);
-  }, [search]);
+  }, [term]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,9 +84,9 @@ function UploadForm() {
             ) : (
               <>
                 <input type="search" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search by name, patient number or phone…" className={inputCls} style={inputStyle} />
-                {results.length > 0 && (
+                {shown.length > 0 && (
                   <ul className="mt-2 rounded-lg border divide-y" style={{ borderColor: "var(--grey-200)" }}>
-                    {results.map((r) => (
+                    {shown.map((r) => (
                       <li key={r.id}>
                         <button type="button" onClick={() => { setPatient({ id: r.id, name: `${r.firstName} ${r.lastName}`, number: r.patientNumber }); setSearch(""); setResults([]); }}
                           className="w-full text-left px-4 py-2.5 text-sm hover:bg-gray-50" style={{ color: "var(--navy)" }}>

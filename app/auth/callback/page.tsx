@@ -14,7 +14,6 @@ export default function AuthCallback() {
   const [attempt, setAttempt] = useState(0);
 
   const run = useCallback(async (isCancelled: () => boolean) => {
-    setError("");
     try {
       // The webhook that creates our DB row may lag a moment behind sign-up: retry 404s briefly.
       let user: any = null;
@@ -58,7 +57,7 @@ export default function AuthCallback() {
         {error ? (
           <>
             <p className="text-sm mb-4" style={{ color: "rgba(255,255,255,0.8)" }}>{error}</p>
-            <button onClick={() => setAttempt((n) => n + 1)}
+            <button onClick={() => { setError(""); setAttempt((n) => n + 1); }}
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>
               Try again
             </button>

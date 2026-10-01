@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import PortalShell from "@/components/PortalShell";
 import { ErrorBox, Spinner, inputCls, inputStyle } from "@/components/ui";
@@ -9,15 +9,15 @@ import { errMsg, fmtDate, insuranceLabel } from "@/lib/format";
 
 const PAGE = 25;
 
+// The result remembers which search term it belongs to, so "loading" is simply
+// "we don't have results for the current term yet" — no setState needed inside the effect.
+type Result = { term: string; rows: any[]; hasMore: boolean; error: string };
+
 function PatientsList() {
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
-  const [rows, setRows] = useState<any[]>([]);
-  const [hasMore, setHasMore] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [result, setResult] = useState<Result | null>(null);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [error, setError] = useState("");
-  const reqId = useRef(0);
 
   // Debounce the search box.
   useEffect(() => {
@@ -25,29 +25,26 @@ function PatientsList() {
     return () => clearTimeout(t);
   }, [q]);
 
-  // Reload from the top whenever the search term changes (stale responses are ignored).
+  // (Re)load from the top whenever the term changes; ignore stale responses.
   useEffect(() => {
-    const id = ++reqId.current;
-    setLoading(true);
-    setError("");
+    let cancelled = false;
     staffApi.getPatients({ q: term || undefined, limit: PAGE, offset: 0 })
-      .then(({ data }) => {
-        if (id !== reqId.current) return;
-        setRows(data.data);
-        setHasMore(data.data.length === PAGE);
-      })
-      .catch((err) => { if (id === reqId.current) setError(errMsg(err, "Couldn't load patients.")); })
-      .finally(() => { if (id === reqId.current) setLoading(false); });
+      .then(({ data }) => { if (!cancelled) setResult({ term, rows: data.data, hasMore: data.data.length === PAGE, error: "" }); })
+      .catch((err) => { if (!cancelled) setResult({ term, rows: [], hasMore: false, error: errMsg(err, "Couldn't load patients.") }); });
+    return () => { cancelled = true; };
   }, [term]);
 
+  const loading = !result || result.term !== term;
+  const rows = loading ? [] : result!.rows;
+
   const loadMore = async () => {
+    if (!result) return;
     setLoadingMore(true);
     try {
-      const { data } = await staffApi.getPatients({ q: term || undefined, limit: PAGE, offset: rows.length });
-      setRows((r) => [...r, ...data.data]);
-      setHasMore(data.data.length === PAGE);
+      const { data } = await staffApi.getPatients({ q: term || undefined, limit: PAGE, offset: result.rows.length });
+      setResult((r) => r && { ...r, rows: [...r.rows, ...data.data], hasMore: data.data.length === PAGE });
     } catch (err) {
-      setError(errMsg(err, "Couldn't load more patients."));
+      setResult((r) => r && { ...r, error: errMsg(err, "Couldn't load more patients.") });
     } finally {
       setLoadingMore(false);
     }
@@ -61,8 +58,8 @@ function PatientsList() {
           placeholder="Search by name, patient number or phone…" className={inputCls} style={inputStyle} />
       </div>
 
-      {error && <ErrorBox>{error}</ErrorBox>}
-      {loading ? <Spinner label="Loading patients..." /> : rows.length === 0 ? (
+      {result?.error && <ErrorBox>{result.error}</ErrorBox>}
+      {loading ? <Spinner label="Loading patients..." /> : rows.length === 0 && !result?.error ? (
         <p className="text-sm py-10 text-center" style={{ color: "var(--grey-500)" }}>
           {term ? `No patients match “${term}”.` : "No patients yet."}
         </p>
@@ -81,7 +78,7 @@ function PatientsList() {
               <div className="text-xs md:text-right" style={{ color: "var(--grey-400)" }}>Joined {fmtDate(String(p.createdAt).slice(0, 10))}</div>
             </Link>
           ))}
-          {hasMore && (
+          {result?.hasMore && (
             <div className="text-center pt-4">
               <button onClick={loadMore} disabled={loadingMore} className="px-6 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>
                 {loadingMore ? "Loading..." : "Load more"}

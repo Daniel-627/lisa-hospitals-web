@@ -14,20 +14,20 @@ const normalizePhone = (raw: string): string | null => {
 export default function CompleteProfilePage() {
   const router = useRouter();
   const { user, isLoaded, isSignedIn } = useUser();
-  const [form, setForm] = useState({ phone: "", firstName: "", lastName: "" });
+  // Only what the user types is stored. Clerk's name is shown until they edit it (derived — no effect needed).
+  const [edits, setEdits] = useState<{ phone?: string; firstName?: string; lastName?: string }>({});
+  const form = {
+    phone: edits.phone ?? "",
+    firstName: edits.firstName ?? user?.firstName ?? "",
+    lastName: edits.lastName ?? user?.lastName ?? "",
+  };
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
   useEffect(() => {
     if (!isLoaded) return;
-    if (!isSignedIn) { router.replace("/login"); return; }
-    // `user` is undefined on first render, so prefill once it has loaded.
-    setForm((f) => ({
-      ...f,
-      firstName: f.firstName || user?.firstName || "",
-      lastName: f.lastName || user?.lastName || "",
-    }));
-  }, [isLoaded, isSignedIn, user, router]);
+    if (!isSignedIn) router.replace("/login");
+  }, [isLoaded, isSignedIn, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,13 +83,13 @@ export default function CompleteProfilePage() {
             <div>
               <label htmlFor="firstName" className="block text-sm font-medium mb-1" style={{ color: "var(--navy)" }}>First name</label>
               <input id="firstName" type="text" required value={form.firstName}
-                onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+                onChange={(e) => setEdits({ ...edits, firstName: e.target.value })}
                 className="w-full px-4 py-3 rounded-lg border text-sm outline-none" style={{ borderColor: "var(--grey-200)" }} />
             </div>
             <div>
               <label htmlFor="lastName" className="block text-sm font-medium mb-1" style={{ color: "var(--navy)" }}>Last name</label>
               <input id="lastName" type="text" required value={form.lastName}
-                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
+                onChange={(e) => setEdits({ ...edits, lastName: e.target.value })}
                 className="w-full px-4 py-3 rounded-lg border text-sm outline-none" style={{ borderColor: "var(--grey-200)" }} />
             </div>
           </div>
@@ -104,7 +104,7 @@ export default function CompleteProfilePage() {
                 +254
               </span>
               <input id="phone" type="tel" required inputMode="tel" autoComplete="tel-national"
-                value={form.phone} onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                value={form.phone} onChange={(e) => setEdits({ ...edits, phone: e.target.value })}
                 className="flex-1 px-4 py-3 rounded-r-lg border text-sm outline-none"
                 style={{ borderColor: "var(--grey-200)" }} placeholder="7XX XXX XXX" />
             </div>
