@@ -76,7 +76,7 @@ function ProfileForm() {
       {saved && <SuccessBox>Profile saved.</SuccessBox>}
       {needsDob && (
         <div className="p-3 rounded-lg text-sm" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>
-          Please confirm your date of birth — we've used a placeholder until you do.
+          Please confirm your date of birth — we&apos;ve used a placeholder until you do.
         </div>
       )}
 

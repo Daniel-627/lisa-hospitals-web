@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { authApi } from "@/lib/api";
@@ -13,43 +13,42 @@ export default function AuthCallback() {
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
 
-  const run = useCallback(async (isCancelled: () => boolean) => {
-    try {
-      // The webhook that creates our DB row may lag a moment behind sign-up: retry 404s briefly.
-      let user: any = null;
-      for (let i = 0; i < 4 && !user; i++) {
-        try {
-          const { data } = await authApi.me();
-          user = data.data;
-        } catch (err: any) {
-          if (err.response?.status !== 404) throw err;
-          await sleep(750);
-          if (isCancelled()) return;
-        }
-      }
-      if (isCancelled()) return;
-
-      // Still no row (or placeholder phone) → the user needs to complete their profile.
-      if (!user || !user.phone || user.phone.startsWith("clerk-")) {
-        router.replace("/complete-profile");
-        return;
-      }
-      router.replace(user.role === "patient" ? "/patient/dashboard" : "/staff/dashboard");
-    } catch (err: any) {
-      if (isCancelled()) return;
-      if (err.response?.status === 401) { router.replace("/login"); return; }
-      // Network / server problem: don't bounce the user into the wrong flow — let them retry.
-      setError("We couldn't load your account. Please check your connection and try again.");
-    }
-  }, [router]);
-
   useEffect(() => {
     if (!isLoaded) return;
     if (!isSignedIn) { router.replace("/login"); return; }
+
     let cancelled = false;
-    run(() => cancelled);
+    (async () => {
+      try {
+        // The webhook that creates our DB row may lag a moment behind sign-up: retry 404s briefly.
+        let user: any = null;
+        for (let i = 0; i < 4 && !user; i++) {
+          try {
+            const { data } = await authApi.me();
+            user = data.data;
+          } catch (err: any) {
+            if (err.response?.status !== 404) throw err;
+            await sleep(750);
+            if (cancelled) return;
+          }
+        }
+        if (cancelled) return;
+
+        // Still no row (or placeholder phone) → the user needs to complete their profile.
+        if (!user || !user.phone || user.phone.startsWith("clerk-")) {
+          router.replace("/complete-profile");
+          return;
+        }
+        router.replace(user.role === "patient" ? "/patient/dashboard" : "/staff/dashboard");
+      } catch (err: any) {
+        if (cancelled) return;
+        if (err.response?.status === 401) { router.replace("/login"); return; }
+        // Network / server problem: don't bounce the user into the wrong flow — let them retry.
+        setError("We couldn't load your account. Please check your connection and try again.");
+      }
+    })();
     return () => { cancelled = true; };
-  }, [isLoaded, isSignedIn, router, run, attempt]);
+  }, [isLoaded, isSignedIn, router, attempt]);
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--navy)" }}>
