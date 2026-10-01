@@ -66,7 +66,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
       } catch (err: any) {
         if (cancelled) return;
         const status = err.response?.status;
-        if (status === 401) router.replace("/login");
+        if (status === 401) setError("The server couldn't verify your session. Please sign out and sign in again.");
         else if (status === 404) router.replace("/complete-profile");
         else setError("We couldn't reach the server. Please check your connection and try again.");
       }
@@ -81,6 +81,9 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
           <p className="text-sm mb-4" style={{ color: "var(--grey-500)" }}>{error}</p>
           <button onClick={() => { setError(""); setAttempt((n) => n + 1); }} className="px-5 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>
             Try again
+          </button>
+          <button onClick={() => signOut({ redirectUrl: "/login" })} className="ml-3 px-5 py-2 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>
+            Sign out
           </button>
         </div>
       </div>

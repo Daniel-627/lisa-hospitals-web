@@ -49,7 +49,7 @@ export default function CompleteProfilePage() {
       });
       router.push("/auth/callback");
     } catch (err: any) {
-      if (err.response?.status === 401) { router.push("/login"); return; }
+      if (err.response?.status === 401) { setError("The server couldn't verify your session. Please sign out and sign in again."); return; }
       setError(err.response?.data?.error || "Something went wrong — please try again");
     } finally {
       setLoading(false);
