@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "@clerk/nextjs";
+import { useAuth, useClerk } from "@clerk/nextjs";
 import { authApi } from "@/lib/api";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -10,6 +10,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 export default function AuthCallback() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
+  const { signOut } = useClerk();
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
 
@@ -42,7 +43,12 @@ export default function AuthCallback() {
         router.replace(user.role === "patient" ? "/patient/dashboard" : "/staff/dashboard");
       } catch (err: any) {
         if (cancelled) return;
-        if (err.response?.status === 401) { router.replace("/login"); return; }
+        // A 401 here means Clerk says "signed in" but our API rejected the token. Redirecting to /login would
+        // just bounce straight back here (Clerk sees an active session), so show the problem instead.
+        if (err.response?.status === 401) {
+          setError("The server couldn't verify your session. Please sign out and sign in again.");
+          return;
+        }
         // Network / server problem: don't bounce the user into the wrong flow — let them retry.
         setError("We couldn't load your account. Please check your connection and try again.");
       }
@@ -59,6 +65,10 @@ export default function AuthCallback() {
             <button onClick={() => { setError(""); setAttempt((n) => n + 1); }}
               className="px-5 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>
               Try again
+            </button>
+            <button onClick={() => signOut({ redirectUrl: "/login" })}
+              className="ml-3 px-5 py-2 rounded-lg text-sm font-semibold" style={{ background: "rgba(255,255,255,0.12)", color: "white" }}>
+              Sign out
             </button>
           </>
         ) : (
