@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import PortalShell from "@/components/PortalShell";
-import { departmentsApi, appointmentsApi } from "@/lib/api";
+import { departmentsApi, appointmentsApi, doctorsApi } from "@/lib/api";
 
 const TIME_SLOTS = [
   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -15,17 +15,31 @@ const TIME_SLOTS = [
 const pad = (n: number) => String(n).padStart(2, "0");
 const toLocalISODate = (d: Date) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
-export default function BookAppointmentPage() {
+function BookForm() {
   const router = useRouter();
+  const search = useSearchParams();
+  const preDept = search.get("department") ?? "";
+  const preDoctor = search.get("doctor") ?? "";
   const { isLoaded, isSignedIn } = useAuth();
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(preDept ? 2 : 1); // arriving from a department/doctor page skips step 1
   const [departments, setDepartments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [doctor, setDoctor] = useState<any>(null);
+
+  // Arriving from a doctor's profile (?doctor=…): load their name for display.
+  useEffect(() => {
+    if (!preDoctor) return;
+    let cancelled = false;
+    doctorsApi.getById(preDoctor)
+      .then(({ data }) => { if (!cancelled) setDoctor(data.data); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [preDoctor]);
 
   const [form, setForm] = useState({
-    departmentId: "", departmentName: "", appointmentDate: "", appointmentTime: "", reason: "",
+    departmentId: preDept, departmentName: "", doctorId: preDoctor, appointmentDate: "", appointmentTime: "", reason: "",
   });
 
   useEffect(() => {
@@ -63,6 +77,7 @@ export default function BookAppointmentPage() {
     try {
       await appointmentsApi.create({
         departmentId: form.departmentId,
+        doctorId: form.doctorId || undefined,
         appointmentDate: form.appointmentDate,
         appointmentTime: form.appointmentTime,
         reason: form.reason.trim() || undefined,
@@ -84,6 +99,9 @@ export default function BookAppointmentPage() {
     setError("");
     setStep(3);
   };
+
+  const deptName = form.departmentName || departments.find((d) => d.id === form.departmentId)?.name || "";
+  const doctorName = doctor ? `Dr. ${doctor.firstName} ${doctor.lastName}` : "";
 
   if (!isLoaded) return null;
 
@@ -124,7 +142,7 @@ export default function BookAppointmentPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {departments.map((dept) => (
                   <button key={dept.id}
-                    onClick={() => { setForm({ ...form, departmentId: dept.id, departmentName: dept.name }); setError(""); setStep(2); }}
+                    onClick={() => { setForm({ ...form, departmentId: dept.id, departmentName: dept.name, doctorId: dept.id === form.departmentId ? form.doctorId : "" }); setError(""); setStep(2); }}
                     className="p-4 rounded-xl border text-left transition-all hover:shadow-md"
                     style={{
                       borderColor: form.departmentId === dept.id ? "var(--teal)" : "var(--grey-200)",
@@ -144,7 +162,7 @@ export default function BookAppointmentPage() {
         {step === 2 && (
           <div>
             <h2 className="text-lg font-semibold mb-1" style={{ color: "var(--navy)" }}>Pick Date & Time</h2>
-            <p className="text-sm mb-6" style={{ color: "var(--grey-500)" }}>Department: <strong>{form.departmentName}</strong></p>
+            <p className="text-sm mb-6" style={{ color: "var(--grey-500)" }}>Department: <strong>{deptName}</strong>{doctorName && <> · Doctor: <strong>{doctorName}</strong></>}</p>
 
             <div className="mb-6">
               <label htmlFor="date" className="block text-sm font-medium mb-2" style={{ color: "var(--navy)" }}>Date</label>
@@ -199,7 +217,8 @@ export default function BookAppointmentPage() {
 
             <div className="p-6 rounded-xl border mb-6" style={{ borderColor: "var(--grey-200)", background: "white" }}>
               <div className="space-y-4">
-                <Row label="Department" value={form.departmentName} />
+                <Row label="Department" value={deptName} />
+                {doctorName && <Row label="Doctor" value={doctorName} />}
                 <Row label="Date" value={new Date(`${form.appointmentDate}T00:00:00`).toLocaleDateString("en-KE", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} />
                 <Row label="Time" value={form.appointmentTime} />
                 {form.reason && <Row label="Reason" value={form.reason} />}
@@ -232,4 +251,9 @@ function Row({ label, value }: { label: string; value: string }) {
       <span className="text-sm font-semibold max-w-xs text-right" style={{ color: "var(--navy)" }}>{value}</span>
     </div>
   );
+}
+
+export default function BookAppointmentPage() {
+  // useSearchParams needs a Suspense boundary for production builds
+  return <Suspense fallback={null}><BookForm /></Suspense>;
 }

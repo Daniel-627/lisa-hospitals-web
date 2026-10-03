@@ -37,3 +37,8 @@ export const INSURANCE: [string, string][] = [
   ["aon", "AON"], ["mtiba", "M-Tiba"], ["pesapal", "Pesapal"],
 ];
 export const insuranceLabel = (v?: string | null) => INSURANCE.find(([k]) => k === v)?.[1] ?? "None on file";
+
+export const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+export const fmtMoney = (v?: string | number | null) =>
+  v == null || v === "" ? "" : `KES ${Number(v).toLocaleString("en-KE", { maximumFractionDigits: 0 })}`;
