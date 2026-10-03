@@ -20,7 +20,7 @@ export default function HomePage() {
   return (
     <>
       {/* HERO */}
-      <div className="relative overflow-hidden px-6 py-24 text-center" style={{ background: "var(--navy)" }}>
+      <div className="relative overflow-hidden px-6 py-16 sm:py-24 text-center" style={{ background: "var(--navy)" }}>
         <div className="absolute inset-0 pointer-events-none" aria-hidden>
           <div className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-10" style={{ background: "var(--teal)", transform: "translate(30%, -30%)" }} />
           <div className="absolute bottom-0 left-0 w-64 h-64 rounded-full opacity-5" style={{ background: "var(--teal)", transform: "translate(-30%, 30%)" }} />
@@ -30,10 +30,10 @@ export default function HomePage() {
             <span className="w-1.5 h-1.5 rounded-full animate-pulse" style={{ background: "#00969A" }} />
             Open 24 Hours · Namba Okana, Kisumu
           </div>
-          <h1 className="text-5xl md:text-6xl font-normal text-white mb-4 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+          <h1 className="text-4xl sm:text-5xl md:text-6xl font-normal text-white mb-4 leading-tight" style={{ fontFamily: "var(--font-display)" }}>
             Your Health Is<br /><em className="italic" style={{ color: "#5cdde0" }}>Our Priority</em>
           </h1>
-          <p className="text-lg mb-8 max-w-lg mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
+          <p className="text-base sm:text-lg mb-8 max-w-lg mx-auto leading-relaxed" style={{ color: "rgba(255,255,255,0.6)" }}>
             Comprehensive medical care for you and your family — from emergency response and specialist clinics to maternity and critical care.
           </p>
           <div className="flex items-center justify-center gap-4 flex-wrap">
@@ -44,14 +44,14 @@ export default function HomePage() {
       </div>
 
       {/* SERVICES */}
-      <section className="px-6 py-20 max-w-6xl mx-auto">
+      <section className="px-6 py-14 sm:py-20 max-w-6xl mx-auto">
         <div className="text-center mb-12">
           <div className="text-xs font-bold tracking-widest uppercase mb-2" style={{ color: "var(--teal)" }}>What we offer</div>
-          <h2 className="text-4xl font-normal" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>
+          <h2 className="text-3xl sm:text-4xl font-normal" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>
             Our Medical <em className="italic" style={{ color: "var(--teal)" }}>Services</em>
           </h2>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {DEPARTMENTS.map((s) => (
             <Link key={s.slug} href={`/services/${toUrlSlug(s.slug)}`} className="p-5 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
               <div className="text-2xl mb-3" aria-hidden>{s.icon}</div>
@@ -80,7 +80,7 @@ export default function HomePage() {
         <div className="max-w-4xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
           {stats.map((s) => (
             <div key={s.label}>
-              <div className="text-4xl font-bold text-white mb-1" style={{ fontFamily: "var(--font-display)" }}>{s.num}<span style={{ color: "var(--teal)" }}>{s.unit}</span></div>
+              <div className="text-3xl sm:text-4xl font-bold text-white mb-1" style={{ fontFamily: "var(--font-display)" }}>{s.num}<span style={{ color: "var(--teal)" }}>{s.unit}</span></div>
               <div className="text-xs tracking-widest uppercase" style={{ color: "rgba(255,255,255,0.4)" }}>{s.label}</div>
             </div>
           ))}
@@ -88,8 +88,8 @@ export default function HomePage() {
       </section>
 
       {/* CTA */}
-      <section className="px-6 py-20 text-center" style={{ background: "var(--teal)" }}>
-        <h2 className="text-4xl font-normal text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>Ready to See a Doctor?</h2>
+      <section className="px-6 py-14 sm:py-20 text-center" style={{ background: "var(--teal)" }}>
+        <h2 className="text-3xl sm:text-4xl font-normal text-white mb-3" style={{ fontFamily: "var(--font-display)" }}>Ready to See a Doctor?</h2>
         <p className="text-base mb-8" style={{ color: "rgba(255,255,255,0.8)" }}>Book an appointment online or walk in anytime — we&apos;re open around the clock.</p>
         <div className="flex items-center justify-center gap-4 flex-wrap">
           <Link href={BOOK_URL} className="px-8 py-3.5 rounded-lg font-bold text-sm" style={{ background: "white", color: "var(--teal)" }}>Book Appointment</Link>
