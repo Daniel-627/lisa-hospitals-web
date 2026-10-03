@@ -2,13 +2,13 @@ import type { ReactNode } from "react";
 
 export function PageHero({ eyebrow, title, accent, subtitle }: { eyebrow?: string; title: string; accent?: string; subtitle?: string }) {
   return (
-    <div className="relative overflow-hidden px-6 py-16 text-center" style={{ background: "var(--navy)" }}>
+    <div className="relative overflow-hidden px-6 py-12 sm:py-16 text-center" style={{ background: "var(--navy)" }}>
       <div className="absolute inset-0 pointer-events-none" aria-hidden>
         <div className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-10" style={{ background: "var(--teal)", transform: "translate(30%, -30%)" }} />
       </div>
       <div className="relative z-10 max-w-2xl mx-auto">
         {eyebrow && <div className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#5cdde0" }}>{eyebrow}</div>}
-        <h1 className="text-4xl md:text-5xl font-normal text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>
+        <h1 className="text-3xl sm:text-4xl md:text-5xl font-normal text-white leading-tight" style={{ fontFamily: "var(--font-display)" }}>
           {title}{accent && <> <em className="italic" style={{ color: "#5cdde0" }}>{accent}</em></>}
         </h1>
         {subtitle && <p className="mt-4 text-base leading-relaxed" style={{ color: "rgba(255,255,255,0.65)" }}>{subtitle}</p>}

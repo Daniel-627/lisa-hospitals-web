@@ -33,7 +33,7 @@ export default function PublicNav() {
           </div>
         </Link>
 
-        <nav className="hidden lg:flex items-center gap-1" aria-label="Main">
+        <nav className="hidden xl:flex items-center gap-1" aria-label="Main">
           {LINKS.map((l) => (
             <Link key={l.href} href={l.href} aria-current={isActive(l.href) ? "page" : undefined}
               className="px-3 py-2 text-sm font-medium rounded-lg"
@@ -50,14 +50,14 @@ export default function PublicNav() {
           </Link>
           <Link href={BOOK_URL} className="text-sm font-semibold px-4 py-2 rounded-lg text-white hidden sm:block" style={{ background: "var(--teal)" }}>Book Appointment</Link>
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Menu"
-            className="lg:hidden w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ background: "rgba(255,255,255,0.1)" }}>
+            className="xl:hidden w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ background: "rgba(255,255,255,0.1)" }}>
             {open ? "✕" : "☰"}
           </button>
         </div>
       </div>
 
       {open && (
-        <nav className="lg:hidden px-6 pb-4 border-t" style={{ borderColor: "rgba(255,255,255,0.1)" }} aria-label="Mobile">
+        <nav className="xl:hidden px-6 pb-4 border-t max-h-[calc(100vh-4rem)] overflow-y-auto" style={{ borderColor: "rgba(255,255,255,0.1)" }} aria-label="Mobile">
           <div className="flex flex-col pt-2">
             {LINKS.map((l) => (
               <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="py-3 text-sm font-medium"
