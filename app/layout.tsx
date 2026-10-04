@@ -4,7 +4,6 @@ import { ClerkProvider } from "@clerk/nextjs";
 import TokenProvider from "@/components/TokenProvider";
 import SiteChrome from "@/components/SiteChrome";
 import PublicNav from "@/components/PublicNav";
-import EmergencyBar from "@/components/EmergencyBar";
 import PublicFooter from "@/components/PublicFooter";
 import "./globals.css";
 
@@ -38,7 +37,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <body className={`${dmSerif.variable} ${inter.variable} antialiased`}>
           <TokenProvider />
           <SiteChrome
-            nav={<><PublicNav /><EmergencyBar /></>}
+            nav={<PublicNav />}
             footer={<PublicFooter />}
           >
             {children}

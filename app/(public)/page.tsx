@@ -251,15 +251,15 @@ export default function HomePage() {
               Book Appointment
             </Link>
 
-            <a
-              href={`tel:${HOSPITAL.phoneTel}`}
+            <Link
+              href="/contact"
               className="rounded-lg px-8 py-3.5 text-sm font-semibold text-white transition-all hover:bg-white/10"
               style={{
                 border: "1.5px solid rgba(255,255,255,0.55)",
               }}
             >
-              Call {HOSPITAL.phoneDisplay}
-            </a>
+              Contact Us
+            </Link>
           </div>
         </div>
       </section>

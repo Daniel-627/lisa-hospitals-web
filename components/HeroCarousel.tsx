@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
-import { BOOK_URL, HOSPITAL } from "@/lib/hospital";
+import { BOOK_URL } from "@/lib/hospital";
 
 interface HeroSlide {
   eyebrow: string;
@@ -156,34 +156,9 @@ export function HeroCarousel() {
               </Link>
             </div>
 
-            {/* Emergency information */}
-            <div className="mt-10 flex items-center gap-4">
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
-                style={{
-                  background: "rgba(232,160,32,0.13)",
-                  color: "var(--gold)",
-                }}
-              >
-                <span className="text-lg">+</span>
-              </div>
-
-              <div>
-                <div
-                  className="text-[10px] font-bold uppercase tracking-[0.16em]"
-                  style={{ color: "rgba(255,255,255,0.4)" }}
-                >
-                  24-Hour Emergency Line
-                </div>
-
-                <a
-                  href={`tel:${HOSPITAL.phoneTel}`}
-                  className="text-sm font-bold text-white hover:underline"
-                >
-                  {HOSPITAL.phoneDisplay}
-                </a>
-              </div>
-            </div>
+            <p className="mt-8 text-xs font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
+              Open 24/7 · Walk-ins welcome · No referrals needed
+            </p>
           </div>
         </div>
 
