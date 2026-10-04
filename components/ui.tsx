@@ -76,3 +76,15 @@ export function DetailRow({ label, value }: { label: string; value?: ReactNode }
     </div>
   );
 }
+
+const PILL: Record<string, { bg: string; fg: string }> = {
+  ok:     { bg: "var(--teal-light)", fg: "var(--teal-dark)" },
+  warn:   { bg: "var(--gold-light)", fg: "var(--gold-dark)" },
+  muted:  { bg: "var(--grey-100)", fg: "var(--grey-500)" },
+  danger: { bg: "#fde8e8", fg: "var(--danger)" },
+};
+
+export function Pill({ children, tone = "muted" }: { children: ReactNode; tone?: "ok" | "warn" | "muted" | "danger" }) {
+  const t = PILL[tone];
+  return <span className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ background: t.bg, color: t.fg }}>{children}</span>;
+}
