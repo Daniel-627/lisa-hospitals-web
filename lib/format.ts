@@ -42,3 +42,13 @@ export const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Fr
 
 export const fmtMoney = (v?: string | number | null) =>
   v == null || v === "" ? "" : `KES ${Number(v).toLocaleString("en-KE", { maximumFractionDigits: 0 })}`;
+
+export const ROLES: [string, string][] = [
+  ["patient", "Patient"], ["doctor", "Doctor"], ["nurse", "Nurse"], ["receptionist", "Receptionist"],
+  ["lab_technician", "Lab technician"], ["radiographer", "Radiographer"], ["pharmacist", "Pharmacist"],
+  ["billing_officer", "Billing officer"], ["admin", "Admin"],
+];
+export const roleLabel = (v: string) => ROLES.find(([k]) => k === v)?.[1] ?? v;
+
+export const fmtDateTime = (iso?: string | null) =>
+  iso ? new Date(iso).toLocaleString("en-KE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";

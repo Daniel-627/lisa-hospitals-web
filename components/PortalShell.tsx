@@ -23,6 +23,14 @@ const NAV = {
     { href: "/staff/appointments", label: "Appointments" },
     { href: "/staff/documents", label: "Documents" },
   ],
+  admin: [
+    { href: "/admin/dashboard", label: "Dashboard" },
+    { href: "/admin/users", label: "Users" },
+    { href: "/admin/news", label: "News" },
+    { href: "/admin/enquiries", label: "Messages" },
+    { href: "/admin/audit", label: "Audit log" },
+    { href: "/staff/dashboard", label: "Staff portal" },
+  ],
   patient: [
     { href: "/patient/dashboard", label: "Dashboard" },
     { href: "/patient/appointments/book", label: "Book" },
@@ -32,7 +40,7 @@ const NAV = {
 } as const;
 
 type Slot = ReactNode | ((me: Me) => ReactNode);
-type Props = { audience: "staff" | "patient"; title: Slot; subtitle?: Slot; children: ReactNode };
+type Props = { audience: "staff" | "patient" | "admin"; title: Slot; subtitle?: Slot; children: ReactNode };
 
 /**
  * Guards a portal page: must be signed in with Clerk, the role (read from OUR api, not the browser)
@@ -60,6 +68,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
 
         if (audience === "staff" && isPatient) { router.replace("/patient/dashboard"); return; }
         if (audience === "patient" && !isPatient) { router.replace("/staff/dashboard"); return; }
+        if (audience === "admin" && u.role !== "admin") { router.replace(isPatient ? "/patient/dashboard" : "/staff/dashboard"); return; }
         if (isPatient && (!u.phone || u.phone.startsWith("clerk-"))) { router.replace("/complete-profile"); return; }
 
         if (!cancelled) setMe(u);
@@ -94,18 +103,20 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     return <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--white)" }}><Spinner /></div>;
   }
 
-  const links = NAV[audience];
+  const base: readonly { href: string; label: string }[] = NAV[audience];
+  // Admins get an "Admin" tab in the staff portal so they can jump back.
+  const links = audience === "staff" && me.role === "admin" ? [...base, { href: "/admin/dashboard", label: "Admin" }] : base;
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);
   return (
     <MeContext.Provider value={me}>
-      <div className="min-h-screen" style={{ background: audience === "staff" ? "var(--grey-100)" : "var(--white)" }}>
+      <div className="min-h-screen" style={{ background: audience === "patient" ? "var(--white)" : "var(--grey-100)" }}>
         <header className="sticky top-0 z-50" style={{ background: "var(--navy)" }}>
           <div className="flex items-center justify-between px-6 h-16">
             <Link href={links[0].href} className="flex items-center gap-3">
               <LogoMark />
               <span className="text-white font-bold text-sm">Lisa Hospitals</span>
-              {audience === "staff" && (
-                <span className="text-xs px-2 py-0.5 rounded hidden sm:inline" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>Staff Portal</span>
+              {audience !== "patient" && (
+                <span className="text-xs px-2 py-0.5 rounded hidden sm:inline" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>{audience === "admin" ? "Admin" : "Staff Portal"}</span>
               )}
             </Link>
             <div className="flex items-center gap-4">

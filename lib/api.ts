@@ -93,3 +93,26 @@ export const syncApi = {
   push: (data: any) => api.post("/api/sync/push", data),
   pull: (since?: string) => api.get("/api/sync/pull", { params: since ? { since } : undefined }),
 };
+
+// Admin (all endpoints are admin-only on the server)
+type Page = { limit?: number; offset?: number };
+export const adminApi = {
+  stats:               ()                                  => api.get("/api/admin/stats"),
+  users:               (params?: Page & { q?: string; role?: string }) => api.get("/api/admin/users", { params }),
+  user:                (id: string)                        => api.get(`/api/admin/users/${id}`),
+  updateUser:          (id: string, data: { role?: string; isActive?: boolean }) => api.patch(`/api/admin/users/${id}`, data),
+  createStaffProfile:  (userId: string, data: any)         => api.post(`/api/admin/users/${userId}/staff-profile`, data),
+  updateStaffProfile:  (userId: string, data: any)         => api.patch(`/api/admin/users/${userId}/staff-profile`, data),
+  createDoctorProfile: (userId: string, data: any)         => api.post(`/api/admin/users/${userId}/doctor-profile`, data),
+  updateDoctor:        (doctorId: string, data: any)       => api.patch(`/api/admin/doctors/${doctorId}`, data),
+  setAvailability:     (doctorId: string, slots: any[])    => api.put(`/api/admin/doctors/${doctorId}/availability`, { slots }),
+  enquiries:           (params?: Page & { unread?: boolean }) => api.get("/api/admin/enquiries", { params }),
+  setEnquiryRead:      (id: string, isRead: boolean)       => api.patch(`/api/admin/enquiries/${id}`, { isRead }),
+  deleteEnquiry:       (id: string)                        => api.delete(`/api/admin/enquiries/${id}`),
+  newsList:            (params?: Page)                     => api.get("/api/admin/news", { params }),
+  newsGet:             (id: string)                        => api.get(`/api/admin/news/${id}`),
+  newsCreate:          (data: any)                         => api.post("/api/admin/news", data),
+  newsUpdate:          (id: string, data: any)             => api.put(`/api/admin/news/${id}`, data),
+  newsDelete:          (id: string)                        => api.delete(`/api/admin/news/${id}`),
+  audit:               (params?: Page & { action?: string }) => api.get("/api/admin/audit", { params }),
+};

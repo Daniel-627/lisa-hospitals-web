@@ -40,7 +40,7 @@ export default function AuthCallback() {
           router.replace("/complete-profile");
           return;
         }
-        router.replace(user.role === "patient" ? "/patient/dashboard" : "/staff/dashboard");
+        router.replace(user.role === "patient" ? "/patient/dashboard" : user.role === "admin" ? "/admin/dashboard" : "/staff/dashboard");
       } catch (err: any) {
         if (cancelled) return;
         // A 401 here means Clerk says "signed in" but our API rejected the token. Redirecting to /login would
