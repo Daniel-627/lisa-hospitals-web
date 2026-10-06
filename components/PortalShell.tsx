@@ -22,6 +22,7 @@ const NAV = {
     { href: "/staff/patients", label: "Patients" },
     { href: "/staff/appointments", label: "Appointments" },
     { href: "/staff/documents", label: "Documents" },
+    { href: "/patient/dashboard", label: "My health" },
   ],
   admin: [
     { href: "/admin/dashboard", label: "Dashboard" },
@@ -67,7 +68,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
         const isPatient = u.role === "patient";
 
         if (audience === "staff" && isPatient) { router.replace("/patient/dashboard"); return; }
-        if (audience === "patient" && !isPatient) { router.replace("/staff/dashboard"); return; }
+        // Staff are people too: they may open the patient portal for their OWN health records.
         if (audience === "admin" && u.role !== "admin") { router.replace(isPatient ? "/patient/dashboard" : "/staff/dashboard"); return; }
         if (isPatient && (!u.phone || u.phone.startsWith("clerk-"))) { router.replace("/complete-profile"); return; }
 
@@ -105,7 +106,10 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
 
   const base: readonly { href: string; label: string }[] = NAV[audience];
   // Admins get an "Admin" tab in the staff portal so they can jump back.
-  const links = audience === "staff" && me.role === "admin" ? [...base, { href: "/admin/dashboard", label: "Admin" }] : base;
+  const links =
+    audience === "staff" && me.role === "admin" ? [...base, { href: "/admin/dashboard", label: "Admin" }]
+    : audience === "patient" && me.role !== "patient" ? [...base, { href: "/staff/dashboard", label: "Staff portal" }]
+    : base;
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);
   return (
     <MeContext.Provider value={me}>

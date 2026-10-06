@@ -19,14 +19,33 @@ function Content() {
   const [profile, setProfile] = useState<any>(null);
   const [error, setError] = useState("");
   const [cancellingId, setCancellingId] = useState<string | null>(null);
+  const [needsProfile, setNeedsProfile] = useState(false);
+  const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     Promise.all([appointmentsApi.getMine(), patientsApi.getProfile()])
       .then(([a, p]) => { if (!cancelled) { setAppointments(a.data.data); setProfile(p.data.data); } })
-      .catch((err) => { if (!cancelled) { setAppointments([]); setError(errMsg(err, "We couldn't load your dashboard. Please refresh.")); } });
+      .catch((err) => {
+        if (cancelled) return;
+        setAppointments([]);
+        if (err.response?.status === 404) setNeedsProfile(true); // e.g. a staff member who has never used the patient side
+        else setError(errMsg(err, "We couldn't load your dashboard. Please refresh."));
+      });
     return () => { cancelled = true; };
   }, []);
+
+  const enroll = async () => {
+    setEnrolling(true);
+    setError("");
+    try {
+      await patientsApi.enroll();
+      window.location.reload();
+    } catch (err) {
+      setError(errMsg(err, "Couldn't create your patient profile."));
+      setEnrolling(false);
+    }
+  };
 
   const cancel = async (id: string) => {
     if (!window.confirm("Cancel this appointment?")) return;
@@ -43,6 +62,24 @@ function Content() {
   };
 
   if (!appointments) return <Spinner label="Loading your dashboard..." />;
+
+  if (needsProfile) {
+    return (
+      <>
+        {error && <ErrorBox>{error}</ErrorBox>}
+        <Card className="max-w-lg text-center !p-8">
+          <div className="text-3xl mb-3" aria-hidden>🩺</div>
+          <h2 className="text-lg font-semibold mb-2" style={{ color: "var(--navy)" }}>Set up your patient profile</h2>
+          <p className="text-sm mb-5" style={{ color: "var(--grey-500)" }}>
+            You work here, but you can also be a patient. Create a patient profile to book appointments and keep your own health records. Your colleagues can&apos;t see them unless they are treating you.
+          </p>
+          <button onClick={enroll} disabled={enrolling} className="px-6 py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-70" style={{ background: "var(--teal)" }}>
+            {enrolling ? "Creating..." : "Create my patient profile"}
+          </button>
+        </Card>
+      </>
+    );
+  }
 
   const upcoming = appointments
     .filter((a) => a.status === "pending" || a.status === "confirmed")

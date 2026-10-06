@@ -69,6 +69,7 @@ export const patientsApi = {
   updateProfile: (data: any) => api.patch("/api/patients/me", data),
   getDocuments:  ()          => api.get("/api/patients/me/documents"),
   getVisits:     ()          => api.get("/api/patients/me/visits"),
+  enroll:        ()          => api.post("/api/patients/me/enroll"),
 };
 
 // Staff
@@ -77,6 +78,7 @@ export const staffApi = {
   getPatients:    (params?: { q?: string; limit?: number; offset?: number }) => api.get("/api/staff/patients", { params }),
   getPatientById: (id: string) => api.get(`/api/staff/patients/${id}`),
   uploadDocument: (data: any)  => api.post("/api/staff/documents", data),
+  requestEmergencyAccess: (id: string, reason: string) => api.post(`/api/staff/patients/${id}/emergency-access`, { reason }),
 };
 
 // Billing (future phase — endpoints already exist)

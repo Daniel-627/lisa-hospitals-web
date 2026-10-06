@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Our Services — Lisa Hospitals",
   description: "Explore our 12 departments: emergency care, maternity, laboratory, pharmacy, radiology, dental, eye care and more.",
 };
-export const revalidate = 300;
+export const revalidate = 60;
 
 export default async function ServicesPage() {
   const { data } = await apiGet<any[]>("/api/departments");

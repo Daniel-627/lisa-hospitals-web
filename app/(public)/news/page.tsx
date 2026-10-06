@@ -14,7 +14,7 @@ type Props = { searchParams: Promise<{ page?: string }> };
 
 export default async function NewsPage({ searchParams }: Props) {
   const page = Math.max(parseInt((await searchParams).page ?? "1", 10) || 1, 1);
-  const { data } = await apiGet<any[]>(`/api/news?limit=${PAGE}&offset=${(page - 1) * PAGE}`, 120);
+  const { data } = await apiGet<any[]>(`/api/news?limit=${PAGE}&offset=${(page - 1) * PAGE}`, 60);
   const hasMore = (data?.length ?? 0) === PAGE;
 
   return (

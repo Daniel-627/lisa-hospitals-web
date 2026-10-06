@@ -4,7 +4,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export type ApiResult<T> = { data: T | null; status: number }; // status 0 = network failure/timeout
 
-export async function apiGet<T = any>(path: string, revalidate = 300): Promise<ApiResult<T>> {
+export async function apiGet<T = any>(path: string, revalidate = 60): Promise<ApiResult<T>> {
   try {
     const res = await fetch(`${API_URL}${path}`, { next: { revalidate }, signal: AbortSignal.timeout(15000) });
     if (!res.ok) return { data: null, status: res.status };

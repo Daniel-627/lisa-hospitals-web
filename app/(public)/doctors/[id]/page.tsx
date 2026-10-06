@@ -6,7 +6,7 @@ import { apiGet } from "@/lib/serverApi";
 import { BOOK_URL } from "@/lib/hospital";
 import { DAYS, fmtMoney, hhmm } from "@/lib/format";
 
-export const revalidate = 300;
+export const revalidate = 60;
 type Props = { params: Promise<{ id: string }> };
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 

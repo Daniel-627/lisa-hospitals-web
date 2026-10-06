@@ -7,7 +7,7 @@ export const metadata: Metadata = {
   title: "Our Doctors — Lisa Hospitals",
   description: "Meet the doctors and specialists at Lisa Hospitals in Kisumu.",
 };
-export const revalidate = 300;
+export const revalidate = 60;
 
 export default async function DoctorsPage() {
   const { data } = await apiGet<any[]>("/api/doctors");

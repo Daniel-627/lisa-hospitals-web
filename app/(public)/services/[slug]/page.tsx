@@ -7,7 +7,7 @@ import { apiGet } from "@/lib/serverApi";
 import { DEPARTMENTS, deptMeta, toApiSlug, toUrlSlug } from "@/lib/departments";
 import { BOOK_URL, HOSPITAL } from "@/lib/hospital";
 
-export const revalidate = 300;
+export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
 
 export function generateStaticParams() {

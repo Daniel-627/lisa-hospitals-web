@@ -5,18 +5,18 @@ import { Section, Unavailable } from "@/components/public";
 import { apiGet } from "@/lib/serverApi";
 import { fmtDate } from "@/lib/format";
 
-export const revalidate = 120;
+export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
-  const { data } = await apiGet<any>(`/api/news/${encodeURIComponent(slug)}`, 120);
+  const { data } = await apiGet<any>(`/api/news/${encodeURIComponent(slug)}`, 60);
   return data ? { title: `${data.title} — Lisa Hospitals`, description: data.excerpt ?? undefined } : { title: "Article — Lisa Hospitals" };
 }
 
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
-  const { data, status } = await apiGet<any>(`/api/news/${encodeURIComponent(slug)}`, 120);
+  const { data, status } = await apiGet<any>(`/api/news/${encodeURIComponent(slug)}`, 60);
   if (status === 404) notFound();
   if (!data) return <Section narrow><Unavailable what="this article" /></Section>;
 
