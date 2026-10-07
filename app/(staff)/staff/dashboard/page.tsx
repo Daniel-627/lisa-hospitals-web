@@ -8,6 +8,8 @@ import { staffApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
 
 const actions = [
+  { label: "Check-in",        icon: "🧾", href: "/staff/checkin" },
+  { label: "Queue",           icon: "🧍", href: "/staff/queue" },
   { label: "View Patients",   icon: "👥", href: "/staff/patients" },
   { label: "Appointments",    icon: "📅", href: "/staff/appointments" },
   { label: "Upload Document", icon: "📄", href: "/staff/documents" },

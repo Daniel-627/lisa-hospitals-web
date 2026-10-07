@@ -19,8 +19,10 @@ export const useMe = () => {
 const NAV = {
   staff: [
     { href: "/staff/dashboard", label: "Dashboard" },
+    { href: "/staff/queue", label: "Queue", roles: ["receptionist", "nurse", "doctor", "admin"] },
+    { href: "/staff/checkin", label: "Check-in", roles: ["receptionist", "nurse", "doctor", "admin"] },
     { href: "/staff/patients", label: "Patients" },
-    { href: "/staff/appointments", label: "Appointments" },
+    { href: "/staff/appointments", label: "Appointments", roles: ["admin", "receptionist", "doctor", "nurse"] },
     { href: "/staff/documents", label: "Documents" },
     { href: "/patient/dashboard", label: "My health" },
   ],
@@ -104,12 +106,15 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     return <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--white)" }}><Spinner /></div>;
   }
 
-  const base: readonly { href: string; label: string }[] = NAV[audience];
+  type NavItem = { href: string; label: string; roles?: readonly string[] };
+  const base: readonly NavItem[] = NAV[audience];
   // Admins get an "Admin" tab in the staff portal so they can jump back.
   const links =
     audience === "staff" && me.role === "admin" ? [...base, { href: "/admin/dashboard", label: "Admin" }]
     : audience === "patient" && me.role !== "patient" ? [...base, { href: "/staff/dashboard", label: "Staff portal" }]
     : base;
+  // Some tabs only make sense for certain roles (the server enforces this too).
+  const visible = links.filter((l) => !(l as NavItem).roles || (l as NavItem).roles!.includes(me.role));
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);
   return (
     <MeContext.Provider value={me}>
@@ -135,7 +140,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
             </div>
           </div>
           <nav className="flex gap-1 px-4 overflow-x-auto" aria-label="Portal">
-            {links.map((l) => {
+            {visible.map((l) => {
               const active = pathname === l.href || (l.href !== links[0].href && pathname.startsWith(l.href));
               return (
                 <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined}

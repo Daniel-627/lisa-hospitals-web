@@ -114,6 +114,9 @@ function Manager() {
 
               <div className="flex items-center gap-2 flex-wrap">
                 <StatusBadge status={a.status} />
+                {canManage && a.appointmentDate === todayLocal() && (a.status === "pending" || a.status === "confirmed") && (
+                  <Link href={`/staff/checkin?patientId=${a.patientId}&appointmentId=${a.id}`} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ background: "var(--navy)" }}>Check in</Link>
+                )}
                 {canManage && (ACTIONS[a.status] ?? []).map((act) => (
                   <button key={act.to} onClick={() => change(a.id, act)} disabled={busyId === a.id}
                     className="px-3 py-1.5 rounded-lg text-xs font-semibold disabled:opacity-50"

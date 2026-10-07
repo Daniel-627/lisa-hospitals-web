@@ -109,6 +109,7 @@ function PatientDetail() {
           {!p.hasAccount && <div className="mt-2"><Pill tone="warn">Walk-in · no online account</Pill></div>}
         </div>
         <div className="flex gap-2 flex-wrap">
+          {canEdit && <Link href={`/staff/checkin?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--navy)" }}>Check in</Link>}
           {canEdit && <Link href={`/staff/patients/${p.id}/edit`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Edit details</Link>}
           <Link href={`/staff/documents?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>Upload document</Link>
         </div>
