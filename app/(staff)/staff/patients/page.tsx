@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import PortalShell from "@/components/PortalShell";
+import PortalShell, { useMe } from "@/components/PortalShell";
 import { ErrorBox, Spinner, inputCls, inputStyle } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { errMsg, fmtDate, insuranceLabel } from "@/lib/format";
@@ -14,6 +14,8 @@ const PAGE = 25;
 type Result = { term: string; rows: any[]; hasMore: boolean; error: string };
 
 function PatientsList() {
+  const me = useMe();
+  const canRegister = ["receptionist", "nurse", "doctor", "admin"].includes(me.role);
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -52,6 +54,11 @@ function PatientsList() {
 
   return (
     <>
+      {canRegister && (
+        <div className="mb-5">
+          <Link href="/staff/patients/new" className="inline-block px-6 py-3 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>+ Register patient</Link>
+        </div>
+      )}
       <div className="mb-6 max-w-md">
         <label htmlFor="search" className="sr-only">Search patients</label>
         <input id="search" type="search" value={q} onChange={(e) => setQ(e.target.value)}
@@ -71,7 +78,7 @@ function PatientsList() {
               style={{ borderColor: "var(--grey-200)", background: "white" }}>
               <div className="col-span-2 md:col-span-2">
                 <div className="font-semibold text-sm" style={{ color: "var(--navy)" }}>{p.firstName} {p.lastName}</div>
-                <div className="text-xs" style={{ color: "var(--grey-400)" }}>{p.patientNumber}</div>
+                <div className="text-xs" style={{ color: "var(--grey-400)" }}>{p.patientNumber}{p.hasAccount === false ? " · walk-in" : ""}</div>
               </div>
               <div className="text-xs" style={{ color: "var(--grey-500)" }}>{p.phone?.startsWith("clerk-") ? "No phone yet" : p.phone}</div>
               <div className="text-xs" style={{ color: "var(--grey-500)" }}>{insuranceLabel(p.insuranceScheme)}</div>

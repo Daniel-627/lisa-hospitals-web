@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import PortalShell from "@/components/PortalShell";
-import { Card, DetailRow, ErrorBox, Spinner, StatusBadge, inputCls, inputStyle } from "@/components/ui";
+import PortalShell, { useMe } from "@/components/PortalShell";
+import { Card, DetailRow, ErrorBox, Pill, Spinner, StatusBadge, inputCls, inputStyle } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { docLabel, errMsg, fmtDate, fmtDateTime, hhmm, insuranceLabel } from "@/lib/format";
 
@@ -44,6 +44,8 @@ function EmergencyAccessForm({ patientId, onGranted }: { patientId: string; onGr
 
 function PatientDetail() {
   const { id } = useParams<{ id: string }>();
+  const me = useMe();
+  const canEdit = ["receptionist", "nurse", "doctor", "admin"].includes(me.role);
   const [version, setVersion] = useState(0);
   const [p, setP] = useState<any>(null);
   const [denied, setDenied] = useState<Denied | null>(null);
@@ -104,8 +106,12 @@ function PatientDetail() {
         <div>
           <h2 className="text-2xl font-semibold" style={{ color: "var(--navy)" }}>{p.firstName} {p.lastName}</h2>
           <p className="text-sm" style={{ color: "var(--grey-500)" }}>{p.patientNumber} · {insuranceLabel(p.insuranceScheme)}</p>
+          {!p.hasAccount && <div className="mt-2"><Pill tone="warn">Walk-in · no online account</Pill></div>}
         </div>
-        <Link href={`/staff/documents?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>Upload document</Link>
+        <div className="flex gap-2 flex-wrap">
+          {canEdit && <Link href={`/staff/patients/${p.id}/edit`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Edit details</Link>}
+          <Link href={`/staff/documents?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>Upload document</Link>
+        </div>
       </div>
 
       {clinical ? (
@@ -122,7 +128,7 @@ function PatientDetail() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
           <DetailRow label="Phone" value={p.phone?.startsWith("clerk-") ? "Not provided" : p.phone} />
           <DetailRow label="Email" value={p.email} />
-          <DetailRow label="Date of birth" value={fmtDate(p.dateOfBirth)} />
+          <DetailRow label="Date of birth" value={`${fmtDate(p.dateOfBirth)}${p.dobIsEstimated ? " (estimated)" : ""}`} />
           <DetailRow label="Gender" value={p.gender} />
           {clinical && <DetailRow label="Blood group" value={p.bloodGroup} />}
           <DetailRow label="National ID" value={p.nationalId} />

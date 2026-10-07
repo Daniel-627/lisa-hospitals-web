@@ -10,7 +10,7 @@ const PAGE = 50;
 const ACTIONS = [
   "user.role_changed", "user.status_changed", "staff.created", "staff.updated", "doctor.created", "doctor.updated",
   "doctor.availability_set", "news.created", "news.published", "news.unpublished", "news.updated", "news.deleted", "enquiry.deleted",
-  "patient.viewed", "patient.break_glass", "document.uploaded",
+  "patient.viewed", "patient.break_glass", "patient.registered", "patient.updated", "document.uploaded",
 ];
 type Result = { key: string; rows: any[]; hasMore: boolean; error: string };
 

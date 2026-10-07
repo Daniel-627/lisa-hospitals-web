@@ -78,6 +78,8 @@ export const staffApi = {
   getPatients:    (params?: { q?: string; limit?: number; offset?: number }) => api.get("/api/staff/patients", { params }),
   getPatientById: (id: string) => api.get(`/api/staff/patients/${id}`),
   uploadDocument: (data: any)  => api.post("/api/staff/documents", data),
+  registerPatient: (data: any) => api.post("/api/staff/patients", data),
+  updatePatient:   (id: string, data: any) => api.patch(`/api/staff/patients/${id}`, data),
   requestEmergencyAccess: (id: string, reason: string) => api.post(`/api/staff/patients/${id}/emergency-access`, { reason }),
 };
 
