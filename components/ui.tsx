@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { urgencyInfo } from "@/lib/format";
 
 export const inputCls = "w-full px-4 py-3 rounded-lg border text-sm outline-none";
 export const inputStyle: CSSProperties = { borderColor: "var(--grey-200)", color: "var(--navy)", background: "white" };
@@ -87,4 +88,9 @@ const PILL: Record<string, { bg: string; fg: string }> = {
 export function Pill({ children, tone = "muted" }: { children: ReactNode; tone?: "ok" | "warn" | "muted" | "danger" }) {
   const t = PILL[tone];
   return <span className="text-xs font-bold px-2.5 py-1 rounded-full whitespace-nowrap" style={{ background: t.bg, color: t.fg }}>{children}</span>;
+}
+
+export function UrgencyPill({ level }: { level?: string | null }) {
+  const u = urgencyInfo(level);
+  return u ? <Pill tone={u.tone}>{u.label}</Pill> : null;
 }

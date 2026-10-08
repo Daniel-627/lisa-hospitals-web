@@ -52,3 +52,12 @@ export const roleLabel = (v: string) => ROLES.find(([k]) => k === v)?.[1] ?? v;
 
 export const fmtDateTime = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString("en-KE", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—";
+
+export const URGENCY: { value: string; label: string; hint: string; tone: "danger" | "warn" | "ok" | "muted" }[] = [
+  { value: "1_critical",    label: "1 · Critical",    hint: "Life-threatening, needs immediate care", tone: "danger" },
+  { value: "2_emergent",    label: "2 · Emergent",    hint: "Very urgent, minutes matter",             tone: "danger" },
+  { value: "3_urgent",      label: "3 · Urgent",      hint: "Needs prompt attention",                  tone: "warn" },
+  { value: "4_semi_urgent", label: "4 · Semi-urgent", hint: "Can wait a short while",                  tone: "ok" },
+  { value: "5_non_urgent",  label: "5 · Non-urgent",  hint: "Routine",                                 tone: "muted" },
+];
+export const urgencyInfo = (v?: string | null) => URGENCY.find((u) => u.value === v);
