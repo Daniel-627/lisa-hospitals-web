@@ -183,6 +183,37 @@ function PatientDetail() {
           </section>
         )}
       </div>
+
+      {clinical && (p.consultations ?? []).length > 0 && (
+        <section className="mt-8">
+          <h3 className="text-lg font-semibold mb-3" style={{ color: "var(--navy)" }}>Consultations</h3>
+          <div className="space-y-2">
+            {p.consultations.map((c: any) => (
+              <Card key={c.id} className="!p-4">
+                <div className="flex items-start justify-between gap-3 flex-wrap">
+                  <div>
+                    <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{c.diagnosis || "No diagnosis recorded"}{c.icdCode ? ` (${c.icdCode})` : ""}</div>
+                    <div className="text-xs" style={{ color: "var(--grey-500)" }}>{c.doctor} · {c.department} · {fmtDateTime(c.date)}</div>
+                  </div>
+                  {c.followUpDate && <Pill tone="warn">Follow-up {fmtDate(c.followUpDate)}</Pill>}
+                </div>
+                <details className="mt-2">
+                  <summary className="text-xs font-semibold cursor-pointer" style={{ color: "var(--teal)" }}>Notes, plan and medicines</summary>
+                  <div className="mt-2 space-y-2 text-sm" style={{ color: "var(--navy)" }}>
+                    {c.clinicalNotes && <p className="whitespace-pre-line">{c.clinicalNotes}</p>}
+                    {c.treatmentPlan && <p><span style={{ color: "var(--grey-400)" }}>Plan: </span>{c.treatmentPlan}</p>}
+                    {c.medicines.length > 0 && (
+                      <ul className="list-disc pl-5">
+                        {c.medicines.map((m: any, i: number) => <li key={i}>{m.drugName} · {m.dosage} · {m.frequency} · {m.duration}{m.isDispensed ? " (dispensed)" : ""}</li>)}
+                      </ul>
+                    )}
+                  </div>
+                </details>
+              </Card>
+            ))}
+          </div>
+        </section>
+      )}
     </>
   );
 }

@@ -111,9 +111,10 @@ function QueueBoard() {
           {isNurse && v.status === "in_triage" && <button disabled={busy} onClick={() => act(v, staffApi.cancelTriage)} className={btn} style={quiet}>Back to queue</button>}
           {isNurse && v.status === "triaged" && <Link href={`/staff/triage/${v.id}`} className={btn} style={quiet}>Update vitals</Link>}
 
-          {isDoctor && (v.status === "waiting" || v.status === "triaged") && <button disabled={busy} onClick={() => act(v, staffApi.pickUp)} className={btn} style={primary}>Pick up</button>}
+          {isDoctor && (v.status === "waiting" || v.status === "triaged") && <button disabled={busy} onClick={() => act(v, staffApi.pickUp, undefined, () => router.push(`/staff/consult/${v.id}`))} className={btn} style={primary}>Pick up</button>}
+          {isDoctor && v.status === "in_progress" && <Link href={`/staff/consult/${v.id}`} className={btn} style={primary}>Consult</Link>}
 
-          {isClinician && v.status === "in_progress" && <button disabled={busy} onClick={() => act(v, staffApi.completeVisit, "Mark this visit as completed?")} className={btn} style={primary}>Complete</button>}
+          {isNurse && v.status === "in_progress" && <button disabled={busy} onClick={() => act(v, staffApi.completeVisit, "Mark this visit as completed?")} className={btn} style={primary}>Complete</button>}
           {isClinician && v.status === "in_progress" && <button disabled={busy} onClick={() => act(v, staffApi.releaseVisit)} className={btn} style={quiet}>Back to queue</button>}
 
           {open && <button disabled={busy} onClick={() => act(v, staffApi.markLeft, "Mark this patient as having left without being seen?")} className={btn} style={{ background: "#fde8e8", color: "var(--danger)" }}>Left</button>}
