@@ -38,6 +38,7 @@ function QueueBoard() {
   const [now, setNow] = useState(0);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [actionError, setActionError] = useState("");
+  const [requests, setRequests] = useState<any[]>([]);
 
   useEffect(() => {
     departmentsApi.getAll().then(({ data }) => setDepts(data.data)).catch(() => {});
@@ -49,6 +50,20 @@ function QueueBoard() {
     const iv = setInterval(() => { setNow(Date.now()); setTick((n) => n + 1); }, 20000);
     return () => { clearTimeout(first); clearInterval(iv); };
   }, []);
+
+  // Colleagues asking the treating doctor for access to a record.
+  useEffect(() => {
+    if (!isDoctor) return;
+    let cancelled = false;
+    staffApi.accessRequests().then(({ data }) => { if (!cancelled) setRequests(data.data); }).catch(() => {});
+    return () => { cancelled = true; };
+  }, [isDoctor, tick]);
+
+  const answer = async (id: string, approve: boolean) => {
+    setActionError("");
+    try { await staffApi.decideAccess(id, approve); } catch (err) { setActionError(errMsg(err, "Couldn't answer that request.")); }
+    setTick((n) => n + 1);
+  };
 
   const key = `${deptFilter}|${showDone}`;
   useEffect(() => {
@@ -80,6 +95,8 @@ function QueueBoard() {
   const card = (v: any) => {
     const busy = busyId === v.id;
     const open = ["waiting", "in_triage", "triaged", "in_progress"].includes(v.status);
+    const e = v.elsewhere;
+    const busyElsewhere = isClinician && e && !Array.isArray(e) && e.busy; // being seen in another department right now
     return (
       <Card key={v.id} className="!p-4 flex items-center gap-4 flex-wrap">
         <div className="text-center shrink-0 w-14">
@@ -98,6 +115,9 @@ function QueueBoard() {
             {v.status === "waiting" && v.doctorFirstName && <Pill tone="warn">For Dr. {v.doctorLastName}</Pill>}
             {v.status === "in_progress" && v.doctorFirstName && <Pill tone="ok">With Dr. {v.doctorLastName}</Pill>}
             {open && v.status !== "in_progress" && <span className="text-xs" style={{ color: "var(--grey-400)" }}>waiting {waited(v.arrivedAt, now)}</span>}
+            {busyElsewhere && <Pill tone="warn">Being seen in another department</Pill>}
+            {isClinician && e && !Array.isArray(e) && !e.busy && e.count > 0 && <Pill>Also in another department&apos;s queue</Pill>}
+            {Array.isArray(e) && e.map((o: any, i: number) => <Pill key={i}>Also: {o.department} #{o.queueNumber} ({String(o.status).replace("_", " ")})</Pill>)}
             {v.status === "left" && <Pill>Left without being seen</Pill>}
             {v.status === "completed" && <Pill tone="ok">Done</Pill>}
           </div>
@@ -105,13 +125,13 @@ function QueueBoard() {
         <div className="flex gap-2 flex-wrap">
           <Link href={`/staff/patients/${v.patientId}`} className={btn} style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Open file</Link>
 
-          {isNurse && v.status === "waiting" && <button disabled={busy} onClick={() => act(v, staffApi.startTriage, undefined, () => router.push(`/staff/triage/${v.id}`))} className={btn} style={primary}>Start triage</button>}
-          {isNurse && v.status === "waiting" && <button disabled={busy} onClick={() => act(v, staffApi.pickUp, "Treat this patient directly, without triage?")} className={btn} style={quiet}>Treat directly</button>}
+          {isNurse && v.status === "waiting" && <button disabled={busy || !!busyElsewhere} onClick={() => act(v, staffApi.startTriage, undefined, () => router.push(`/staff/triage/${v.id}`))} className={btn} style={primary}>Start triage</button>}
+          {isNurse && v.status === "waiting" && <button disabled={busy || !!busyElsewhere} onClick={() => act(v, staffApi.pickUp, "Treat this patient directly, without triage?")} className={btn} style={quiet}>Treat directly</button>}
           {isNurse && v.status === "in_triage" && <Link href={`/staff/triage/${v.id}`} className={btn} style={primary}>Record vitals</Link>}
           {isNurse && v.status === "in_triage" && <button disabled={busy} onClick={() => act(v, staffApi.cancelTriage)} className={btn} style={quiet}>Back to queue</button>}
           {isNurse && v.status === "triaged" && <Link href={`/staff/triage/${v.id}`} className={btn} style={quiet}>Update vitals</Link>}
 
-          {isDoctor && (v.status === "waiting" || v.status === "triaged") && <button disabled={busy} onClick={() => act(v, staffApi.pickUp, undefined, () => router.push(`/staff/consult/${v.id}`))} className={btn} style={primary}>Pick up</button>}
+          {isDoctor && (v.status === "waiting" || v.status === "triaged") && <button disabled={busy || !!busyElsewhere} onClick={() => act(v, staffApi.pickUp, undefined, () => router.push(`/staff/consult/${v.id}`))} className={btn} style={primary}>Pick up</button>}
           {isDoctor && v.status === "in_progress" && <Link href={`/staff/consult/${v.id}`} className={btn} style={primary}>Consult</Link>}
 
           {isNurse && v.status === "in_progress" && <button disabled={busy} onClick={() => act(v, staffApi.completeVisit, "Mark this visit as completed?")} className={btn} style={primary}>Complete</button>}
@@ -148,6 +168,20 @@ function QueueBoard() {
         {isClinician && <span className="text-xs" style={{ color: "var(--grey-400)" }}>Your department · updates every 20 seconds</span>}
       </div>
 
+      {requests.length > 0 && (
+        <Card className="mb-6 space-y-3" >
+          <h2 className="text-sm font-semibold" style={{ color: "var(--navy)" }}>Colleagues asking to see a record you are treating</h2>
+          {requests.map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 flex-wrap text-sm">
+              <span style={{ color: "var(--navy)" }}><strong>Dr. {r.requesterFirst} {r.requesterLast}</strong> asks to see {r.patientFirst} {r.patientLast} ({r.patientNumber}){r.message ? ` · "${r.message}"` : ""}</span>
+              <span className="flex gap-2">
+                <button onClick={() => answer(r.id, true)} className={btn} style={primary}>Allow for 24 hours</button>
+                <button onClick={() => answer(r.id, false)} className={btn} style={quiet}>Deny</button>
+              </span>
+            </div>
+          ))}
+        </Card>
+      )}
       {error && <ErrorBox>{error}</ErrorBox>}
       {!loading && result?.note && <p className="text-sm py-6" style={{ color: "var(--grey-500)" }}>{result.note}</p>}
       {loading ? <Spinner label="Loading the queue..." /> : (

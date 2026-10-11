@@ -92,6 +92,11 @@ export const staffApi = {
   markLeft:        (id: string) => api.post(`/api/staff/visits/${id}/left`),
   registerPatient: (data: any) => api.post("/api/staff/patients", data),
   updatePatient:   (id: string, data: any) => api.patch(`/api/staff/patients/${id}`, data),
+  requestAccess:   (patientId: string, message?: string) => api.post(`/api/staff/patients/${patientId}/access-request`, { message }),
+  accessRequests:  () => api.get("/api/staff/access-requests"),
+  decideAccess:    (id: string, approve: boolean) => api.post(`/api/staff/access-requests/${id}/decide`, { approve }),
+  shareRecord:     (patientId: string, doctorId: string) => api.post(`/api/staff/patients/${patientId}/share`, { doctorId }),
+  revokeShare:     (id: string) => api.post(`/api/staff/shares/${id}/revoke`),
   requestEmergencyAccess: (id: string, reason: string) => api.post(`/api/staff/patients/${id}/emergency-access`, { reason }),
 };
 

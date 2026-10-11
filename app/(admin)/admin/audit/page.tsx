@@ -12,6 +12,7 @@ const ACTIONS = [
   "doctor.availability_set", "news.created", "news.published", "news.unpublished", "news.updated", "news.deleted", "enquiry.deleted",
   "patient.viewed", "patient.break_glass", "patient.registered", "patient.updated", "document.uploaded",
   "visit.checked_in", "visit.picked_up", "visit.released", "visit.completed", "visit.left", "triage.started", "triage.recorded", "consultation.saved", "consultation.completed",
+  "access.requested", "access.shared", "access.denied", "access.revoked",
 ];
 type Result = { key: string; rows: any[]; hasMore: boolean; error: string };
 

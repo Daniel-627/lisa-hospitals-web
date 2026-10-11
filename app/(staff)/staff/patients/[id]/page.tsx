@@ -8,7 +8,39 @@ import { Card, DetailRow, ErrorBox, Pill, Spinner, StatusBadge, inputCls, inputS
 import { staffApi } from "@/lib/api";
 import { docLabel, errMsg, fmtDate, fmtDateTime, hhmm, insuranceLabel } from "@/lib/format";
 
-type Denied = { patient: { id: string; firstName: string; lastName: string; patientNumber: string }; canRequest: boolean };
+type Denied = {
+  patient: { id: string; firstName: string; lastName: string; patientNumber: string };
+  canRequestEmergency: boolean;
+  primaryDoctor: { name: string } | null;
+  canRequestAccess: boolean;
+  requestPending: boolean;
+};
+
+function RequestAccessForm({ patientId, onSent }: { patientId: string; onSent: () => void }) {
+  const [message, setMessage] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const send = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setBusy(true);
+    setError("");
+    try {
+      await staffApi.requestAccess(patientId, message.trim() || undefined);
+      onSent();
+    } catch (err) {
+      setError(errMsg(err, "Couldn't send the request."));
+      setBusy(false);
+    }
+  };
+  return (
+    <form onSubmit={send} className="space-y-3 text-left">
+      {error && <ErrorBox>{error}</ErrorBox>}
+      <label htmlFor="req-msg" className="block text-sm font-medium" style={{ color: "var(--navy)" }}>Message (optional)</label>
+      <textarea id="req-msg" rows={2} value={message} maxLength={500} onChange={(e) => setMessage(e.target.value)} className={`${inputCls} resize-none`} style={inputStyle} placeholder="e.g. I'm seeing this patient for a second opinion." />
+      <button type="submit" disabled={busy} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>{busy ? "Sending..." : "Ask for access"}</button>
+    </form>
+  );
+}
 
 function EmergencyAccessForm({ patientId, onGranted }: { patientId: string; onGranted: () => void }) {
   const [reason, setReason] = useState("");
@@ -60,7 +92,7 @@ function PatientDetail() {
         const d = err.response?.data;
         if (err.response?.status === 403 && d?.code === "ACCESS_REQUIRED") {
           setP(null); setError("");
-          setDenied({ patient: d.patient, canRequest: !!d.canRequestEmergencyAccess });
+          setDenied({ patient: d.patient, canRequestEmergency: !!d.canRequestEmergencyAccess, primaryDoctor: d.primaryDoctor ?? null, canRequestAccess: !!d.canRequestAccess, requestPending: !!d.requestPending });
         } else {
           setError(err.response?.status === 404 ? "Patient not found." : errMsg(err, "Couldn't load this patient."));
         }
@@ -76,19 +108,30 @@ function PatientDetail() {
     return (
       <>
         {back}
-        <Card className="max-w-xl mt-4 !p-8 text-center space-y-4">
+        <Card className="max-w-xl mt-4 !p-8 text-center space-y-5">
           <div className="text-3xl" aria-hidden>🔒</div>
           <div>
             <h2 className="text-xl font-semibold" style={{ color: "var(--navy)" }}>{denied.patient.firstName} {denied.patient.lastName}</h2>
             <p className="text-sm" style={{ color: "var(--grey-500)" }}>{denied.patient.patientNumber}</p>
           </div>
-          <p className="text-sm" style={{ color: "var(--grey-500)" }}>
-            This record is private. You can open it when the patient is booked with you or your department, or is in your department right now.
-          </p>
-          {denied.canRequest ? (
-            <EmergencyAccessForm patientId={denied.patient.id} onGranted={() => setVersion((v) => v + 1)} />
+          {denied.primaryDoctor ? (
+            <p className="text-sm" style={{ color: "var(--grey-500)" }}>
+              This patient is being treated by <strong style={{ color: "var(--navy)" }}>{denied.primaryDoctor.name}</strong>. The record is private to the treating doctor unless they choose to share it.
+            </p>
           ) : (
-            <p className="text-sm font-medium" style={{ color: "var(--navy)" }}>Ask the treating clinician if you need information from this record.</p>
+            <p className="text-sm" style={{ color: "var(--grey-500)" }}>
+              This record is private. It opens for the doctor who picks the patient up from the queue, or who has the patient booked with them.
+            </p>
+          )}
+          {denied.requestPending && (
+            <p className="text-sm font-semibold" style={{ color: "var(--teal-dark)" }}>Your request has been sent. The record opens once {denied.primaryDoctor?.name ?? "the treating doctor"} approves it.</p>
+          )}
+          {denied.canRequestAccess && !denied.requestPending && <RequestAccessForm patientId={denied.patient.id} onSent={() => setVersion((v) => v + 1)} />}
+          {denied.canRequestEmergency && (
+            <details className="text-left">
+              <summary className="text-xs font-semibold cursor-pointer" style={{ color: "var(--danger)" }}>Emergency access (audited)</summary>
+              <div className="mt-3"><EmergencyAccessForm patientId={denied.patient.id} onGranted={() => setVersion((v) => v + 1)} /></div>
+            </details>
           )}
         </Card>
       </>
@@ -97,6 +140,7 @@ function PatientDetail() {
 
   if (!p) return <Spinner label="Loading patient..." />;
   const clinical = p.accessLevel === "clinical";
+  const triageLevel = p.accessLevel === "triage"; // nurses: allergies and blood group, nothing more
 
   return (
     <>
@@ -119,6 +163,10 @@ function PatientDetail() {
         <div className="mb-6 text-xs px-3 py-2 rounded-lg inline-block" style={{ background: "var(--teal-light)", color: "var(--teal-dark)" }}>
           Access: {p.accessReason}{p.accessExpiresAt ? ` · until ${fmtDateTime(p.accessExpiresAt)}` : ""} · viewing is logged
         </div>
+      ) : triageLevel ? (
+        <div className="mb-6 p-3 rounded-lg text-sm" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>
+          Limited view for care in your department: allergies and blood group are shown. Visit history and documents belong to the treating doctor.
+        </div>
       ) : (
         <div className="mb-6 p-3 rounded-lg text-sm" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>
           Limited view. Clinical details (allergies, blood group, visit reasons and documents) are restricted for your role.
@@ -131,13 +179,13 @@ function PatientDetail() {
           <DetailRow label="Email" value={p.email} />
           <DetailRow label="Date of birth" value={`${fmtDate(p.dateOfBirth)}${p.dobIsEstimated ? " (estimated)" : ""}`} />
           <DetailRow label="Gender" value={p.gender} />
-          {clinical && <DetailRow label="Blood group" value={p.bloodGroup} />}
+          {(clinical || triageLevel) && <DetailRow label="Blood group" value={p.bloodGroup} />}
           <DetailRow label="National ID" value={p.nationalId} />
           <DetailRow label="Insurance no." value={p.insuranceNumber} />
           <DetailRow label="Address" value={p.address} />
           <DetailRow label="Next of kin" value={p.nextOfKinName && `${p.nextOfKinName}${p.nextOfKinRelation ? ` (${p.nextOfKinRelation})` : ""}`} />
           <DetailRow label="Next of kin phone" value={p.nextOfKinPhone} />
-          {clinical && <div className="col-span-2"><DetailRow label="Allergies" value={p.allergies} /></div>}
+          {(clinical || triageLevel) && <div className="col-span-2"><DetailRow label="Allergies" value={p.allergies} /></div>}
         </div>
       </Card>
 

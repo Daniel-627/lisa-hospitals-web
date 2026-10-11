@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Field, Pill, Spinner, SuccessBox, UrgencyPill, inputCls, inputStyle } from "@/components/ui";
-import { departmentsApi, staffApi } from "@/lib/api";
+import { departmentsApi, doctorsApi, staffApi } from "@/lib/api";
 import { errMsg, fmtDate, fmtDateTime, todayLocal } from "@/lib/format";
 
 type Rx = { key: number; drugName: string; dosage: string; frequency: string; duration: string; instructions: string };
@@ -25,6 +25,8 @@ function Consultation() {
   const [version, setVersion] = useState(0);
   const [data, setData] = useState<any>(null);
   const [depts, setDepts] = useState<any[]>([]);
+  const [docs, setDocs] = useState<any[]>([]);
+  const [shareTo, setShareTo] = useState("");
   const [loadError, setLoadError] = useState("");
 
   const [notes, setNotes] = useState("");
@@ -40,6 +42,7 @@ function Consultation() {
 
   useEffect(() => {
     departmentsApi.getAll().then(({ data: res }) => setDepts(res.data)).catch(() => {});
+    doctorsApi.getAll().then(({ data: res }) => setDocs(res.data)).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -64,7 +67,9 @@ function Consultation() {
   if (loadError) return <>{back}<div className="mt-4"><ErrorBox>{loadError}</ErrorBox></div></>;
   if (!data) return <Spinner label="Loading consultation..." />;
 
-  const { patient, visit, triage, history, canEdit } = data;
+  const { patient, visit, triage, history, canEdit, preview } = data;
+  const shares: any[] = data.shares ?? [];
+  const requests: any[] = data.requests ?? [];
   const locked = data.prescriptions.filter((m: any) => m.isDispensed);
   const tokens = allergyTokens(patient.allergies);
 
@@ -98,6 +103,23 @@ function Consultation() {
     } finally {
       setSaving(false);
     }
+  };
+
+  const decide = async (rid: string, approve: boolean) => {
+    setError(""); setFlash("");
+    try { await staffApi.decideAccess(rid, approve); setFlash(approve ? "Access shared for 24 hours." : "Request denied."); setVersion((v) => v + 1); }
+    catch (err) { setError(errMsg(err, "Couldn't answer that request.")); }
+  };
+  const share = async () => {
+    if (!shareTo) return;
+    setError(""); setFlash("");
+    try { await staffApi.shareRecord(patient.id, shareTo); setShareTo(""); setFlash("Shared for 24 hours."); setVersion((v) => v + 1); }
+    catch (err) { setError(errMsg(err, "Couldn't share the record.")); }
+  };
+  const revoke = async (gid: string) => {
+    setError(""); setFlash("");
+    try { await staffApi.revokeShare(gid); setFlash("Access removed."); setVersion((v) => v + 1); }
+    catch (err) { setError(errMsg(err, "Couldn't remove access.")); }
   };
 
   const pickUp = async () => {
@@ -137,6 +159,25 @@ function Consultation() {
           {(status === "waiting" || status === "triaged") && <button onClick={pickUp} className="px-4 py-2 rounded-lg text-xs font-semibold text-white" style={{ background: "var(--teal)" }}>Pick up</button>}
         </div>
       )}
+      {preview && (
+        <div className="mb-6 p-3 rounded-lg text-sm" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>
+          Preview only: triage and allergies, so you can decide. Previous visits and the full record open once you pick this patient up.
+        </div>
+      )}
+      {requests.length > 0 && (
+        <Card className="mb-6 space-y-3">
+          <h3 className="text-sm font-semibold" style={{ color: "var(--navy)" }}>Colleagues asking to see this record</h3>
+          {requests.map((r) => (
+            <div key={r.id} className="flex items-center justify-between gap-3 flex-wrap text-sm">
+              <span style={{ color: "var(--navy)" }}><strong>Dr. {r.firstName} {r.lastName}</strong>{r.message ? ` · "${r.message}"` : ""}</span>
+              <span className="flex gap-2">
+                <button type="button" onClick={() => decide(r.id, true)} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white" style={{ background: "var(--teal)" }}>Allow for 24 hours</button>
+                <button type="button" onClick={() => decide(r.id, false)} className="px-3 py-1.5 rounded-lg text-xs font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Deny</button>
+              </span>
+            </div>
+          ))}
+        </Card>
+      )}
       {error && <ErrorBox>{error}</ErrorBox>}
       {flash && <SuccessBox>{flash}</SuccessBox>}
 
@@ -171,6 +212,26 @@ function Consultation() {
               </div>
             ))}
           </Card>
+
+          {canEdit && (
+            <Card className="space-y-3">
+              <h3 className="text-sm font-semibold" style={{ color: "var(--navy)" }}>Share this record</h3>
+              <p className="text-xs" style={{ color: "var(--grey-500)" }}>Only you can see this patient&apos;s record. Share it with a colleague, for example for a second opinion. Access lasts 24 hours and you can take it back.</p>
+              <div className="flex gap-2">
+                <select aria-label="Doctor to share with" value={shareTo} onChange={(e) => setShareTo(e.target.value)} className={inputCls} style={inputStyle}>
+                  <option value="">Choose a doctor…</option>
+                  {docs.map((d) => <option key={d.id} value={d.id}>Dr. {d.firstName} {d.lastName} · {d.department}</option>)}
+                </select>
+                <button type="button" onClick={share} disabled={!shareTo} className="px-4 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background: "var(--teal)" }}>Share</button>
+              </div>
+              {shares.map((sh) => (
+                <div key={sh.id} className="flex items-center justify-between text-sm" style={{ color: "var(--navy)" }}>
+                  <span>Dr. {sh.firstName} {sh.lastName} <span className="text-xs" style={{ color: "var(--grey-400)" }}>until {fmtDateTime(sh.expiresAt)}</span></span>
+                  <button type="button" onClick={() => revoke(sh.id)} className="text-xs font-semibold" style={{ color: "var(--danger)" }}>Remove</button>
+                </div>
+              ))}
+            </Card>
+          )}
         </div>
 
         {/* ── Right: the doctor's write-up ── */}
