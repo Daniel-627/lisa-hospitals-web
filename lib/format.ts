@@ -77,3 +77,14 @@ export const owed = (inv: { totalAmount: string; paidAmount: string; paymentStat
   inv.paymentStatus === "waived" ? 0 : Math.max(0, Math.round((Number(inv.totalAmount) - Number(inv.paidAmount)) * 100) / 100);
 
 export const CLAIM_SCHEMES: [string, string][] = [["sha", "SHA"], ["maki", "Maki"], ["aon", "AON"], ["mtiba", "M-Tiba"]];
+
+// How a payment on an invoice was made (INSURANCE above is for insurance schemes; this also knows Paystack).
+export const payMethodLabel = (v?: string | null) => (v === "paystack" ? "Paystack (M-Pesa / card)" : v === "cash" ? "Cash" : insuranceLabel(v));
+
+export const ONLINE_STATUS: Record<string, { label: string; tone: "ok" | "warn" | "muted" | "danger" }> = {
+  pending:   { label: "Waiting for payment", tone: "warn" },
+  success:   { label: "Paid", tone: "ok" },
+  failed:    { label: "Failed", tone: "danger" },
+  abandoned: { label: "Abandoned", tone: "muted" },
+  review:    { label: "Needs review", tone: "danger" },
+};

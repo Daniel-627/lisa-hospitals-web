@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import PortalShell from "@/components/PortalShell";
 import InvoiceSheet from "@/components/InvoiceSheet";
+import PayOnline from "@/components/PayOnline";
 import { ErrorBox, Spinner } from "@/components/ui";
 import { billingApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
@@ -28,6 +29,7 @@ function Detail() {
     <div className="max-w-3xl">
       <Link href="/patient/invoices" className="text-sm no-print" style={{ color: "var(--teal)" }}>← My invoices</Link>
       <div className="mt-4"><InvoiceSheet inv={inv} /></div>
+      <div className="mt-4"><PayOnline inv={inv} /></div>
       <button onClick={() => window.print()} className="no-print mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Print / save as PDF</button>
     </div>
   );

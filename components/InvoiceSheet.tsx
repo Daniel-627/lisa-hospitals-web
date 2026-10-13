@@ -1,6 +1,6 @@
 import { Pill } from "@/components/ui";
 import { HOSPITAL } from "@/lib/hospital";
-import { PAY_STATUS, fmtDateTime, fmtKes, insuranceLabel, owed } from "@/lib/format";
+import { PAY_STATUS, fmtDateTime, fmtKes, insuranceLabel, owed, payMethodLabel } from "@/lib/format";
 
 /** The printable invoice / receipt: used by staff and by the patient. */
 export default function InvoiceSheet({ inv }: { inv: any }) {
@@ -64,7 +64,7 @@ export default function InvoiceSheet({ inv }: { inv: any }) {
           <ul className="space-y-1 text-sm" style={{ color: "var(--navy)" }}>
             {inv.payments.map((p: any) => (
               <li key={p.id} className="flex justify-between gap-3">
-                <span>{fmtDateTime(p.paidAt)} · {insuranceLabel(p.paymentMethod)}{p.referenceNumber ? ` · ${p.referenceNumber}` : ""}</span>
+                <span>{fmtDateTime(p.paidAt)} · {payMethodLabel(p.paymentMethod)}{p.referenceNumber ? ` · ${p.referenceNumber}` : ""}</span>
                 <span>{fmtKes(p.amount)}</span>
               </li>
             ))}

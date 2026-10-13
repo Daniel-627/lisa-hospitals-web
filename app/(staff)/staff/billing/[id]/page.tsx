@@ -5,9 +5,10 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import PortalShell, { useMe } from "@/components/PortalShell";
 import InvoiceSheet from "@/components/InvoiceSheet";
+import PayOnline from "@/components/PayOnline";
 import { Card, ErrorBox, Field, Pill, Spinner, SuccessBox, inputCls, inputStyle } from "@/components/ui";
 import { billingApi } from "@/lib/api";
-import { CLAIM_SCHEMES, INSURANCE, errMsg, fmtDate, fmtKes, insuranceLabel, owed } from "@/lib/format";
+import { CLAIM_SCHEMES, INSURANCE, ONLINE_STATUS, errMsg, fmtDate, fmtDateTime, fmtKes, insuranceLabel, owed } from "@/lib/format";
 
 const btn = "px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60";
 const primary = { background: "var(--teal)", color: "white" };
@@ -126,6 +127,26 @@ function Detail() {
                 </Field>
                 <button type="submit" disabled={busy} className={btn} style={primary}>Record payment</button>
               </form>
+            </Card>
+          )}
+
+          <PayOnline inv={inv} title="Collect by M-Pesa or card (Paystack)" />
+
+          {inv.online?.length > 0 && (
+            <Card>
+              <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--navy)" }}>Online payments</h2>
+              <ul className="space-y-3">
+                {inv.online.map((o: any) => (
+                  <li key={o.id} className="text-sm" style={{ color: "var(--navy)" }}>
+                    <div className="flex justify-between items-center gap-2">
+                      <span className="font-semibold">{fmtKes(o.amount)}</span>
+                      <Pill tone={ONLINE_STATUS[o.status]?.tone ?? "muted"}>{ONLINE_STATUS[o.status]?.label ?? o.status}</Pill>
+                    </div>
+                    <div className="text-xs break-all" style={{ color: "var(--grey-500)" }}>{fmtDateTime(o.createdAt)}{o.channel ? ` · ${o.channel}` : ""} · {o.reference}</div>
+                    {o.notes && <div className="text-xs mt-1" style={{ color: o.status === "review" ? "var(--danger)" : "var(--grey-500)" }}>{o.notes}</div>}
+                  </li>
+                ))}
+              </ul>
             </Card>
           )}
 

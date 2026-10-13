@@ -11,6 +11,7 @@ const isPublicRoute = createRouteMatcher([
   "/about(.*)",
   "/contact(.*)",
   "/api/webhook(.*)",
+  "/pay(.*)", // Paystack return page: the payer may not be signed in
 ]);
 
 const isStaffRoute = createRouteMatcher([

@@ -134,6 +134,9 @@ export const billingApi = {
   createClaim:        (id: string, data: any) => api.post(`/api/billing/${id}/claims`, data),
   claims:             (status?: string) => api.get("/api/billing/claims", { params: status ? { status } : undefined }),
   resolveClaim:       (id: string, data: any) => api.post(`/api/billing/claims/${id}/resolve`, data),
+  // Paystack (card / M-Pesa). `pay` returns the Paystack checkout address to send the payer to.
+  pay:                (id: string, amount?: number) => api.post(`/api/billing/${id}/pay`, amount === undefined ? {} : { amount }),
+  verifyPayment:      (reference: string) => api.get("/api/billing/pay/verify", { params: { reference } }),
 };
 
 // Sync (future phase — offline queue)
