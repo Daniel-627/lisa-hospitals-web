@@ -7,6 +7,11 @@ import { authApi } from "@/lib/api";
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
+const LANDING: Record<string, string> = {
+  patient: "/patient/dashboard", admin: "/admin/dashboard",
+  lab_technician: "/staff/lab", radiographer: "/staff/radiology", pharmacist: "/staff/pharmacy",
+};
+
 export default function AuthCallback() {
   const router = useRouter();
   const { isLoaded, isSignedIn } = useAuth();
@@ -40,7 +45,7 @@ export default function AuthCallback() {
           router.replace("/complete-profile");
           return;
         }
-        router.replace(user.role === "patient" ? "/patient/dashboard" : user.role === "admin" ? "/admin/dashboard" : "/staff/dashboard");
+        router.replace(LANDING[user.role] ?? "/staff/dashboard");
       } catch (err: any) {
         if (cancelled) return;
         // A 401 here means Clerk says "signed in" but our API rejected the token. Redirecting to /login would

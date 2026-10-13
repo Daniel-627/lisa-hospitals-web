@@ -21,8 +21,14 @@ const NAV = {
     { href: "/staff/dashboard", label: "Dashboard" },
     { href: "/staff/queue", label: "Queue", roles: ["receptionist", "nurse", "doctor", "admin"] },
     { href: "/staff/checkin", label: "Check-in", roles: ["receptionist", "nurse", "doctor", "admin"] },
-    { href: "/staff/patients", label: "Patients" },
+    { href: "/staff/patients", label: "Patients", roles: ["receptionist", "nurse", "doctor", "admin", "billing_officer"] },
+    { href: "/staff/admissions", label: "Admissions", roles: ["doctor", "nurse", "receptionist", "billing_officer", "admin"] },
+    { href: "/staff/billing", label: "Billing", roles: ["billing_officer", "receptionist", "admin"] },
     { href: "/staff/appointments", label: "Appointments", roles: ["admin", "receptionist", "doctor", "nurse"] },
+    { href: "/staff/results", label: "Results", roles: ["doctor"] },
+    { href: "/staff/lab", label: "Lab", roles: ["lab_technician"] },
+    { href: "/staff/radiology", label: "Radiology", roles: ["radiographer"] },
+    { href: "/staff/pharmacy", label: "Pharmacy", roles: ["pharmacist"] },
     { href: "/staff/documents", label: "Documents" },
     { href: "/patient/dashboard", label: "My health" },
   ],
@@ -38,6 +44,9 @@ const NAV = {
     { href: "/patient/dashboard", label: "Dashboard" },
     { href: "/patient/appointments/book", label: "Book" },
     { href: "/patient/documents", label: "Documents" },
+    { href: "/patient/invoices", label: "Invoices" },
+    { href: "/patient/admissions", label: "Hospital stays" },
+    { href: "/patient/results", label: "Results" },
     { href: "/patient/profile", label: "Profile" },
   ],
 } as const;
@@ -119,7 +128,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
   return (
     <MeContext.Provider value={me}>
       <div className="min-h-screen" style={{ background: audience === "patient" ? "var(--white)" : "var(--grey-100)" }}>
-        <header className="sticky top-0 z-50" style={{ background: "var(--navy)" }}>
+        <header className="sticky top-0 z-50 no-print" style={{ background: "var(--navy)" }}>
           <div className="flex items-center justify-between px-6 h-16">
             <Link href={links[0].href} className="flex items-center gap-3">
               <LogoMark />

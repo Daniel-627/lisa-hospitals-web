@@ -24,3 +24,10 @@ body {
   color: var(--navy);
   font-family: var(--font-body), system-ui, sans-serif;
 }
+/* Receipts, invoices and discharge summaries print as plain pages: no portal chrome. */
+@media print {
+  .no-print { display: none !important; }
+  body { background: white !important; }
+  main { max-width: none !important; padding: 0 !important; }
+  .print-sheet { border: none !important; box-shadow: none !important; }
+}

@@ -6,7 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Field, Pill, Spinner, SuccessBox, UrgencyPill, inputCls, inputStyle } from "@/components/ui";
 import { departmentsApi, doctorsApi, staffApi } from "@/lib/api";
-import { errMsg, fmtDate, fmtDateTime, todayLocal } from "@/lib/format";
+import { URGENCY, errMsg, fmtDate, fmtDateTime, todayLocal } from "@/lib/format";
 
 type Rx = { key: number; drugName: string; dosage: string; frequency: string; duration: string; instructions: string };
 
@@ -27,6 +27,8 @@ function Consultation() {
   const [depts, setDepts] = useState<any[]>([]);
   const [docs, setDocs] = useState<any[]>([]);
   const [shareTo, setShareTo] = useState("");
+  const [newLab, setNewLab] = useState<{ key: number; testName: string; urgency: string; instructions: string }[]>([]);
+  const [newRad, setNewRad] = useState<{ key: number; modality: string; bodyPart: string; clinicalInfo: string }[]>([]);
   const [loadError, setLoadError] = useState("");
 
   const [notes, setNotes] = useState("");
@@ -68,6 +70,7 @@ function Consultation() {
   if (!data) return <Spinner label="Loading consultation..." />;
 
   const { patient, visit, triage, history, canEdit, preview } = data;
+  const orders = data.orders ?? { lab: [], radiology: [] };
   const shares: any[] = data.shares ?? [];
   const requests: any[] = data.requests ?? [];
   const locked = data.prescriptions.filter((m: any) => m.isDispensed);
@@ -120,6 +123,23 @@ function Consultation() {
     setError(""); setFlash("");
     try { await staffApi.revokeShare(gid); setFlash("Access removed."); setVersion((v) => v + 1); }
     catch (err) { setError(errMsg(err, "Couldn't remove access.")); }
+  };
+
+  const sendOrders = async () => {
+    setError(""); setFlash("");
+    const lab = newLab.filter((t) => t.testName.trim()).map((t) => ({ testName: t.testName.trim(), urgency: t.urgency, instructions: t.instructions.trim() || undefined }));
+    const radiology = newRad.filter((t) => t.modality.trim()).map((t) => ({ modality: t.modality.trim(), bodyPart: t.bodyPart.trim() || undefined, clinicalInfo: t.clinicalInfo.trim() || undefined }));
+    if (!lab.length && !radiology.length) return setError("Add at least one test first.");
+    try {
+      await staffApi.placeOrders(id, { lab, radiology });
+      setNewLab([]); setNewRad([]);
+      setFlash("Orders sent to the lab and radiology.");
+      setVersion((v) => v + 1);
+    } catch (err) { setError(errMsg(err, "Couldn't send the orders.")); }
+  };
+  const cancelOrder = async (kind: string, oid: string) => {
+    setError(""); setFlash("");
+    try { await staffApi.cancelOrder(kind, oid); setVersion((v) => v + 1); } catch (err) { setError(errMsg(err, "Couldn't cancel that order.")); }
   };
 
   const pickUp = async () => {
@@ -276,6 +296,63 @@ function Consultation() {
           </Card>
 
           <Card className="space-y-4">
+            <h3 className="text-sm font-semibold" style={{ color: "var(--navy)" }}>Tests <span className="font-normal" style={{ color: "var(--grey-400)" }}>(lab and imaging)</span></h3>
+
+            {[...orders.lab.map((o: any) => ({ ...o, kind: "lab", label: o.testName })), ...orders.radiology.map((o: any) => ({ ...o, kind: "radiology", label: `${o.modality}${o.bodyPart ? ` · ${o.bodyPart}` : ""}` }))].map((o: any) => (
+              <div key={o.id} className="p-3 rounded-lg text-sm space-y-1" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>
+                <div className="flex items-center justify-between gap-3 flex-wrap">
+                  <span><strong>{o.label}</strong> <span className="text-xs" style={{ color: "var(--grey-500)" }}>{o.kind === "lab" ? "Lab" : "Imaging"}</span></span>
+                  <span className="flex items-center gap-2">
+                    <Pill tone={o.status === "completed" ? "ok" : o.status === "cancelled" ? "muted" : "warn"}>{o.status === "completed" ? (o.releasedAt ? "Result · released" : "Result ready") : o.status}</Pill>
+                    {o.status === "pending" && canEdit && <button type="button" onClick={() => cancelOrder(o.kind, o.id)} className="text-xs font-semibold" style={{ color: "var(--danger)" }}>Cancel</button>}
+                  </span>
+                </div>
+                {o.kind === "lab" && o.results.map((r: any) => (
+                  <div key={r.id} className="text-xs" style={{ color: r.isAbnormal ? "var(--danger)" : "var(--navy)" }}>{r.analyte}: <strong>{r.result}</strong> {r.unit ?? ""}{r.referenceRange ? ` (normal ${r.referenceRange})` : ""}{r.isAbnormal ? " · abnormal" : ""}</div>
+                ))}
+                {o.kind === "radiology" && o.results.map((r: any) => (
+                  <div key={r.id} className="text-xs space-y-0.5">{r.impression && <div><strong>Impression:</strong> {r.impression}</div>}{r.findings && <div>{r.findings}</div>}</div>
+                ))}
+              </div>
+            ))}
+
+            {canEdit && (
+              <>
+                <datalist id="lab-tests">
+                  {["Full blood count", "Malaria test (rapid or slide)", "Urinalysis", "Random blood sugar", "HIV test", "Pregnancy test", "Liver function tests", "Renal function tests", "Stool microscopy", "Widal test", "Blood group and crossmatch"].map((t) => <option key={t} value={t} />)}
+                </datalist>
+                {newLab.map((t) => (
+                  <div key={t.key} className="grid sm:grid-cols-6 gap-2 items-center">
+                    <input aria-label="Lab test" list="lab-tests" value={t.testName} maxLength={200} onChange={(e) => setNewLab(newLab.map((x) => (x.key === t.key ? { ...x, testName: e.target.value } : x)))} className={`${inputCls} sm:col-span-2`} style={inputStyle} placeholder="Lab test" />
+                    <select aria-label="Urgency" value={t.urgency} onChange={(e) => setNewLab(newLab.map((x) => (x.key === t.key ? { ...x, urgency: e.target.value } : x)))} className={inputCls} style={inputStyle}>
+                      {URGENCY.map((u) => <option key={u.value} value={u.value}>{u.label}</option>)}
+                    </select>
+                    <input aria-label="Instructions" value={t.instructions} maxLength={1000} onChange={(e) => setNewLab(newLab.map((x) => (x.key === t.key ? { ...x, instructions: e.target.value } : x)))} className={`${inputCls} sm:col-span-2`} style={inputStyle} placeholder="Instructions (optional)" />
+                    <button type="button" onClick={() => setNewLab(newLab.filter((x) => x.key !== t.key))} className="text-xs font-semibold" style={{ color: "var(--danger)" }}>Remove</button>
+                  </div>
+                ))}
+                {newRad.map((t) => (
+                  <div key={t.key} className="grid sm:grid-cols-6 gap-2 items-center">
+                    <select aria-label="Imaging type" value={t.modality} onChange={(e) => setNewRad(newRad.map((x) => (x.key === t.key ? { ...x, modality: e.target.value } : x)))} className={inputCls} style={inputStyle}>
+                      <option value="">Imaging type…</option>
+                      {["X-Ray", "Ultrasound", "CT scan", "MRI", "Other"].map((m) => <option key={m} value={m}>{m}</option>)}
+                    </select>
+                    <input aria-label="Body part" value={t.bodyPart} maxLength={100} onChange={(e) => setNewRad(newRad.map((x) => (x.key === t.key ? { ...x, bodyPart: e.target.value } : x)))} className={`${inputCls} sm:col-span-2`} style={inputStyle} placeholder="Body part (chest, abdomen…)" />
+                    <input aria-label="Clinical information" value={t.clinicalInfo} maxLength={2000} onChange={(e) => setNewRad(newRad.map((x) => (x.key === t.key ? { ...x, clinicalInfo: e.target.value } : x)))} className={`${inputCls} sm:col-span-2`} style={inputStyle} placeholder="Why (clinical information)" />
+                    <button type="button" onClick={() => setNewRad(newRad.filter((x) => x.key !== t.key))} className="text-xs font-semibold" style={{ color: "var(--danger)" }}>Remove</button>
+                  </div>
+                ))}
+                <div className="flex gap-2 flex-wrap">
+                  <button type="button" onClick={() => setNewLab([...newLab, { key: keys.current++, testName: "", urgency: "5_non_urgent", instructions: "" }])} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>+ Lab test</button>
+                  <button type="button" onClick={() => setNewRad([...newRad, { key: keys.current++, modality: "", bodyPart: "", clinicalInfo: "" }])} className="px-4 py-2 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>+ Imaging</button>
+                  {(newLab.length > 0 || newRad.length > 0) && <button type="button" onClick={sendOrders} className="px-5 py-2 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>Send orders</button>}
+                </div>
+                <p className="text-xs" style={{ color: "var(--grey-400)" }}>Results come back to you under Results. The patient sees them only after you release them.</p>
+              </>
+            )}
+          </Card>
+
+          <Card className="space-y-4">
             <div className="grid sm:grid-cols-2 gap-4">
               <Field label="Follow-up date (optional)" htmlFor="c-follow"><input id="c-follow" type="date" min={todayLocal()} value={followUp} disabled={dis} onChange={(e) => setFollowUp(e.target.value)} className={inputCls} style={inputStyle} /></Field>
               <Field label="Refer to another department (optional)" htmlFor="c-ref" hint="When you complete the visit, the patient joins that department's queue.">
@@ -291,6 +368,7 @@ function Consultation() {
             <div className="flex gap-3 flex-wrap">
               <button type="submit" disabled={saving} className="px-6 py-3 rounded-lg text-sm font-semibold disabled:opacity-60" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>{saving ? "Saving..." : "Save"}</button>
               <button type="button" onClick={() => save(true)} disabled={saving} className="px-8 py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>Save &amp; complete visit</button>
+              <Link href={`/staff/admissions/new?visitId=${id}`} className="px-6 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>Admit to ward</Link>
             </div>
           )}
           {data.consultation?.followUpDate && !canEdit && <p className="text-sm" style={{ color: "var(--navy)" }}>Follow-up: {fmtDate(data.consultation.followUpDate)}</p>}

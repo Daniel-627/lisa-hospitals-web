@@ -61,3 +61,19 @@ export const URGENCY: { value: string; label: string; hint: string; tone: "dange
   { value: "5_non_urgent",  label: "5 · Non-urgent",  hint: "Routine",                                 tone: "muted" },
 ];
 export const urgencyInfo = (v?: string | null) => URGENCY.find((u) => u.value === v);
+
+// Invoices show cents; fmtMoney (above) rounds to whole shillings for fees.
+export const fmtKes = (v?: string | number | null) =>
+  `KES ${Number(v ?? 0).toLocaleString("en-KE", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+export const PAY_STATUS: Record<string, { label: string; tone: "ok" | "warn" | "muted" | "danger" }> = {
+  pending: { label: "Unpaid", tone: "danger" },
+  partial: { label: "Part paid", tone: "warn" },
+  paid:    { label: "Paid", tone: "ok" },
+  waived:  { label: "Waived", tone: "muted" },
+};
+
+export const owed = (inv: { totalAmount: string; paidAmount: string; paymentStatus?: string }) =>
+  inv.paymentStatus === "waived" ? 0 : Math.max(0, Math.round((Number(inv.totalAmount) - Number(inv.paidAmount)) * 100) / 100);
+
+export const CLAIM_SCHEMES: [string, string][] = [["sha", "SHA"], ["maki", "Maki"], ["aon", "AON"], ["mtiba", "M-Tiba"]];

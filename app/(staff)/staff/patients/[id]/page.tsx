@@ -155,6 +155,7 @@ function PatientDetail() {
         <div className="flex gap-2 flex-wrap">
           {canEdit && <Link href={`/staff/checkin?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--navy)" }}>Check in</Link>}
           {canEdit && <Link href={`/staff/patients/${p.id}/edit`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Edit details</Link>}
+          {["billing_officer", "receptionist", "admin"].includes(me.role) && <Link href={`/staff/billing/new?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>New invoice</Link>}
           <Link href={`/staff/documents?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>Upload document</Link>
         </div>
       </div>
@@ -250,6 +251,19 @@ function PatientDetail() {
                   <div className="mt-2 space-y-2 text-sm" style={{ color: "var(--navy)" }}>
                     {c.clinicalNotes && <p className="whitespace-pre-line">{c.clinicalNotes}</p>}
                     {c.treatmentPlan && <p><span style={{ color: "var(--grey-400)" }}>Plan: </span>{c.treatmentPlan}</p>}
+                    {((c.labs ?? []).length > 0 || (c.scans ?? []).length > 0) && (
+                      <div>
+                        <p style={{ color: "var(--grey-400)" }}>Tests</p>
+                        <ul className="list-disc pl-5">
+                          {(c.labs ?? []).map((o: any) => (
+                            <li key={o.id}>{o.testName} ({o.status}){o.results?.length ? `: ${o.results.map((r: any) => `${r.analyte} ${r.result}${r.unit ? ` ${r.unit}` : ""}`).join(", ")}` : ""}</li>
+                          ))}
+                          {(c.scans ?? []).map((o: any) => (
+                            <li key={o.id}>{o.modality}{o.bodyPart ? ` · ${o.bodyPart}` : ""} ({o.status}){o.results?.[0]?.impression ? `: ${o.results[0].impression}` : ""}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
                     {c.medicines.length > 0 && (
                       <ul className="list-disc pl-5">
                         {c.medicines.map((m: any, i: number) => <li key={i}>{m.drugName} · {m.dosage} · {m.frequency} · {m.duration}{m.isDispensed ? " (dispensed)" : ""}</li>)}

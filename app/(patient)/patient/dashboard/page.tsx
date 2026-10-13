@@ -10,8 +10,10 @@ import { errMsg, fmtDate, hhmm, insuranceLabel } from "@/lib/format";
 const quickActions = [
   { label: "Book Appointment", icon: "📅", href: "/patient/appointments/book" },
   { label: "My Documents",     icon: "📄", href: "/patient/documents" },
+  { label: "My Results",       icon: "🧪", href: "/patient/results" },
   { label: "My Profile",       icon: "👤", href: "/patient/profile" },
-  { label: "My Invoices",      icon: "💳", href: null }, // future phase
+  { label: "My Invoices",      icon: "💳", href: "/patient/invoices" },
+  { label: "Hospital Stays",   icon: "🛏️", href: "/patient/admissions" },
 ];
 
 function Content() {

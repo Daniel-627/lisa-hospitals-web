@@ -2,21 +2,23 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import PortalShell from "@/components/PortalShell";
+import PortalShell, { useMe } from "@/components/PortalShell";
 import { Card, ErrorBox, Spinner } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
 
-const actions = [
+const actions: { label: string; icon: string; href: string | null; roles?: string[] }[] = [
   { label: "Check-in",        icon: "🧾", href: "/staff/checkin" },
   { label: "Queue",           icon: "🧍", href: "/staff/queue" },
   { label: "View Patients",   icon: "👥", href: "/staff/patients" },
   { label: "Appointments",    icon: "📅", href: "/staff/appointments" },
   { label: "Upload Document", icon: "📄", href: "/staff/documents" },
-  { label: "Billing",         icon: "💳", href: null }, // future phase
+  { label: "Admissions",      icon: "🛏️", href: "/staff/admissions", roles: ["doctor", "nurse", "receptionist", "billing_officer", "admin"] },
+  { label: "Billing",         icon: "💳", href: "/staff/billing", roles: ["billing_officer", "receptionist", "admin"] },
 ];
 
 function Content() {
+  const me = useMe();
   const [stats, setStats] = useState<any>(null);
   const [error, setError] = useState("");
 
@@ -52,7 +54,7 @@ function Content() {
 
       <h2 className="text-xl font-semibold mb-4" style={{ color: "var(--navy)" }}>Quick Actions</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        {actions.map((a) => a.href ? (
+        {actions.filter((a) => !a.roles || a.roles.includes(me.role)).map((a) => a.href ? (
           <Link key={a.label} href={a.href} className="p-5 rounded-xl border text-center transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
             <div className="text-2xl mb-2">{a.icon}</div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
