@@ -56,7 +56,8 @@ function Desk() {
         </div>
         <input value={q} onChange={(e) => setQ(e.target.value)} className={`${inputCls} !w-64`} style={inputStyle} placeholder="Invoice no., patient name or number" aria-label="Search invoices" />
         <div className="ml-auto flex gap-2">
-          <Link href="/staff/billing/claims" className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Insurance claims</Link>
+          <Link href="/staff/billing/prices" className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Price list</Link>
+          <Link href="/staff/billing/claims"className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Insurance claims</Link>
           <Link href="/staff/billing/new" className="px-4 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>New invoice</Link>
         </div>
       </div>

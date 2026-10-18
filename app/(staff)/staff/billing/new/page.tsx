@@ -4,6 +4,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import PortalShell from "@/components/PortalShell";
 import PatientPicker, { type PickedPatient } from "@/components/PatientPicker";
+import PricePicker, { type PriceItem } from "@/components/PricePicker";
 import { Card, ErrorBox, Field, Spinner, inputCls, inputStyle } from "@/components/ui";
 import { billingApi, staffApi } from "@/lib/api";
 import { errMsg, fmtKes } from "@/lib/format";
@@ -43,6 +44,12 @@ function NewInvoice() {
   }, [visitId, prePatient]);
 
   const set = (key: number, patch: Partial<Line>) => setLines((ls) => ls.map((l) => (l.key === key ? { ...l, ...patch } : l)));
+  // Add a priced item as a new line; an untouched blank first row is reused rather than left empty.
+  const pick = (p: PriceItem) => setLines((ls) => {
+    const line = { key: keys.current++, description: p.name, quantity: "1", unitPrice: String(Number(p.unitPrice)) };
+    const blank = ls.length === 1 && !ls[0].description.trim() && !ls[0].unitPrice;
+    return blank ? [line] : [...ls, line];
+  });
   const total = lines.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.unitPrice) || 0), 0);
 
   const submit = async (e: React.FormEvent) => {
@@ -75,6 +82,11 @@ function NewInvoice() {
       <Card>
         <Field label="Patient" htmlFor="pp-search"><PatientPicker value={patient} onChange={setPatient} /></Field>
         {visitId && <p className="text-xs mt-2" style={{ color: "var(--grey-400)" }}>This invoice will be linked to the patient&apos;s visit, so it shows on their admission.</p>}
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--navy)" }}>Price list</h2>
+        <PricePicker onPick={pick} />
       </Card>
 
       <Card>
