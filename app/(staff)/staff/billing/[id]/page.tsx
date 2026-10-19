@@ -33,6 +33,8 @@ function Detail() {
   const [extra, setExtra] = useState<{ key: number; description: string; quantity: string; unitPrice: string }[]>([]);
   const [claim, setClaim] = useState({ scheme: "sha", claimNumber: "", amount: "" });
   const [claimPay, setClaimPay] = useState<Record<string, string>>({}); // claim id → amount received
+  const [linePrice, setLinePrice] = useState<Record<string, string>>({}); // invoice line id → price being typed
+  const [remember, setRemember] = useState<Record<string, boolean>>({}); // also add to the price list
 
   const load = useCallback(() => {
     billingApi.getById(id)
@@ -75,6 +77,12 @@ function Detail() {
     run(() => billingApi.addItems(id, items), "Charges added.", () => setExtra([]));
   };
 
+  const setPrice = (itemId: string) => {
+    const p = Number(linePrice[itemId]);
+    if (!(p > 0)) return setError("Enter a price greater than 0.");
+    run(() => billingApi.priceLine(id, itemId, { unitPrice: p, remember: !!remember[itemId] }), "Price set.", () => setLinePrice((m) => ({ ...m, [itemId]: "" })));
+  };
+
   const waive = () => {
     const reason = window.prompt(`Waive the remaining ${fmtKes(due)}? Give a reason (kept on the invoice and in the audit log):`);
     if (reason === null) return;
@@ -102,11 +110,35 @@ function Detail() {
           <div className="no-print mt-4 flex gap-2 flex-wrap">
             <button onClick={() => window.print()} className={btn} style={quiet}>Print invoice / receipt</button>
             <Link href={`/staff/patients/${inv.patientId}`} className={btn} style={quiet}>Patient file</Link>
+            {inv.visitId && open && <button disabled={busy} onClick={() => run(() => billingApi.refreshCharges(inv.visitId), "Charges refreshed.")} className={btn} style={quiet}>Refresh charges</button>}
             {inv.visitId && <Link href={`/staff/billing/new?patientId=${inv.patientId}&visitId=${inv.visitId}`} className={btn} style={quiet}>Another invoice for this visit</Link>}
           </div>
         </div>
 
         <div className="lg:col-span-2 space-y-5 no-print">
+          {inv.items.some((i: any) => i.needsPrice) && (
+            <Card>
+              <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--navy)" }}>Needs a price</h2>
+              <p className="text-xs mb-3" style={{ color: "var(--grey-500)" }}>These were added automatically from the clinical record but are not on the price list yet.{canWaive ? "" : " The billing officer or an admin sets the price."}</p>
+              <ul className="space-y-3">
+                {inv.items.filter((i: any) => i.needsPrice).map((i: any) => (
+                  <li key={i.id} className="text-sm" style={{ color: "var(--navy)" }}>
+                    <div className="mb-1">{i.description}{i.quantity > 1 ? ` × ${i.quantity}` : ""}</div>
+                    {canWaive && open && (
+                      <div className="flex gap-2 items-center flex-wrap">
+                        <input aria-label={`Price for ${i.description}`} value={linePrice[i.id] ?? ""} onChange={(e) => setLinePrice((m) => ({ ...m, [i.id]: e.target.value }))} placeholder="Unit price (KES)" inputMode="decimal" className="w-36 px-2 py-1.5 rounded-lg border text-xs" style={inputStyle} />
+                        <label className="text-xs flex items-center gap-1" style={{ color: "var(--grey-500)" }}>
+                          <input type="checkbox" checked={!!remember[i.id]} onChange={(e) => setRemember((m) => ({ ...m, [i.id]: e.target.checked }))} /> Add to price list
+                        </label>
+                        <button disabled={busy} onClick={() => setPrice(i.id)} className={`${btn} !py-1.5 !px-3 !text-xs`} style={primary}>Set price</button>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </Card>
+          )}
+
           {open && due > 0 && (
             <Card>
               <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--navy)" }}>Record a payment</h2>

@@ -42,13 +42,19 @@ export default function InvoiceSheet({ inv }: { inv: any }) {
             <tr key={i.id} className="border-t" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }}>
               <td className="py-2 pr-2">{i.description}</td>
               <td className="py-2 text-right">{i.quantity}</td>
-              <td className="py-2 text-right">{fmtKes(i.unitPrice)}</td>
-              <td className="py-2 text-right">{fmtKes(i.totalPrice)}</td>
+              {i.needsPrice
+                ? <td colSpan={2} className="py-2 text-right text-xs font-semibold" style={{ color: "var(--warn, #b45309)" }}>Price to be confirmed</td>
+                : <><td className="py-2 text-right">{fmtKes(i.unitPrice)}</td><td className="py-2 text-right">{fmtKes(i.totalPrice)}</td></>}
             </tr>
           ))}
         </tbody>
       </table>
 
+      {inv.needsPriceCount > 0 && (
+        <p className="text-xs mb-3" style={{ color: "var(--grey-500)" }}>
+          {inv.needsPriceCount} item{inv.needsPriceCount > 1 ? "s are" : " is"} still waiting for a price, so the total may go up.
+        </p>
+      )}
       <div className="ml-auto max-w-xs space-y-1 text-sm" style={{ color: "var(--navy)" }}>
         <div className="flex justify-between"><span>Total</span><strong>{fmtKes(inv.totalAmount)}</strong></div>
         <div className="flex justify-between"><span>Paid</span><span>{fmtKes(inv.paidAmount)}</span></div>

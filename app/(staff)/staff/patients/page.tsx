@@ -15,7 +15,8 @@ type Result = { term: string; rows: any[]; hasMore: boolean; error: string };
 
 function PatientsList() {
   const me = useMe();
-  const canRegister = ["receptionist", "nurse", "doctor", "admin"].includes(me.role);
+  const canRegister = ["receptionist", "admin"].includes(me.role);
+  const isDoctor = me.role === "doctor"; // doctors see the medical record, not contact or insurance details
   const [q, setQ] = useState("");
   const [term, setTerm] = useState("");
   const [result, setResult] = useState<Result | null>(null);
@@ -62,7 +63,7 @@ function PatientsList() {
       <div className="mb-6 max-w-md">
         <label htmlFor="search" className="sr-only">Search patients</label>
         <input id="search" type="search" value={q} onChange={(e) => setQ(e.target.value)}
-          placeholder="Search by name, patient number or phone…" className={inputCls} style={inputStyle} />
+          placeholder={isDoctor ? "Search by name or patient number…" : "Search by name, patient number or phone…"} className={inputCls} style={inputStyle} />
       </div>
 
       {result?.error && <ErrorBox>{result.error}</ErrorBox>}
@@ -80,8 +81,10 @@ function PatientsList() {
                 <div className="font-semibold text-sm" style={{ color: "var(--navy)" }}>{p.firstName} {p.lastName}</div>
                 <div className="text-xs" style={{ color: "var(--grey-400)" }}>{p.patientNumber}{p.hasAccount === false ? " · walk-in" : ""}</div>
               </div>
-              <div className="text-xs" style={{ color: "var(--grey-500)" }}>{p.phone?.startsWith("clerk-") ? "No phone yet" : p.phone}</div>
-              <div className="text-xs" style={{ color: "var(--grey-500)" }}>{insuranceLabel(p.insuranceScheme)}</div>
+              {isDoctor ? <div className="hidden md:block md:col-span-2" /> : <>
+                <div className="text-xs" style={{ color: "var(--grey-500)" }}>{p.phone?.startsWith("clerk-") ? "No phone yet" : p.phone}</div>
+                <div className="text-xs" style={{ color: "var(--grey-500)" }}>{insuranceLabel(p.insuranceScheme)}</div>
+              </>}
               <div className="text-xs md:text-right" style={{ color: "var(--grey-400)" }}>Joined {fmtDate(String(p.createdAt).slice(0, 10))}</div>
             </Link>
           ))}

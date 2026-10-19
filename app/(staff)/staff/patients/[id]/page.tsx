@@ -77,7 +77,9 @@ function EmergencyAccessForm({ patientId, onGranted }: { patientId: string; onGr
 function PatientDetail() {
   const { id } = useParams<{ id: string }>();
   const me = useMe();
-  const canEdit = ["receptionist", "nurse", "doctor", "admin"].includes(me.role);
+  const canEdit = ["receptionist", "nurse", "doctor", "admin"].includes(me.role); // check-in
+  const canEditProfile = ["receptionist", "admin"].includes(me.role); // registration and contact details
+  const isDoctor = me.role === "doctor";    // doctors get the medical record only
   const [version, setVersion] = useState(0);
   const [p, setP] = useState<any>(null);
   const [denied, setDenied] = useState<Denied | null>(null);
@@ -149,12 +151,12 @@ function PatientDetail() {
       <div className="flex items-start justify-between flex-wrap gap-4 mt-4 mb-4">
         <div>
           <h2 className="text-2xl font-semibold" style={{ color: "var(--navy)" }}>{p.firstName} {p.lastName}</h2>
-          <p className="text-sm" style={{ color: "var(--grey-500)" }}>{p.patientNumber} · {insuranceLabel(p.insuranceScheme)}</p>
+          <p className="text-sm" style={{ color: "var(--grey-500)" }}>{p.patientNumber}{isDoctor ? "" : ` · ${insuranceLabel(p.insuranceScheme)}`}</p>
           {!p.hasAccount && <div className="mt-2"><Pill tone="warn">Walk-in · no online account</Pill></div>}
         </div>
         <div className="flex gap-2 flex-wrap">
           {canEdit && <Link href={`/staff/checkin?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--navy)" }}>Check in</Link>}
-          {canEdit && <Link href={`/staff/patients/${p.id}/edit`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Edit details</Link>}
+          {canEditProfile && <Link href={`/staff/patients/${p.id}/edit`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Edit details</Link>}
           {["billing_officer", "receptionist", "admin"].includes(me.role) && <Link href={`/staff/billing/new?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>New invoice</Link>}
           <Link href={`/staff/documents?patientId=${p.id}`} className="px-5 py-2.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>Upload document</Link>
         </div>
@@ -176,16 +178,18 @@ function PatientDetail() {
 
       <Card className="mb-6">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-          <DetailRow label="Phone" value={p.phone?.startsWith("clerk-") ? "Not provided" : p.phone} />
-          <DetailRow label="Email" value={p.email} />
+          {!isDoctor && <DetailRow label="Phone" value={p.phone?.startsWith("clerk-") ? "Not provided" : p.phone} />}
+          {!isDoctor && <DetailRow label="Email" value={p.email} />}
           <DetailRow label="Date of birth" value={`${fmtDate(p.dateOfBirth)}${p.dobIsEstimated ? " (estimated)" : ""}`} />
           <DetailRow label="Gender" value={p.gender} />
           {(clinical || triageLevel) && <DetailRow label="Blood group" value={p.bloodGroup} />}
-          <DetailRow label="National ID" value={p.nationalId} />
-          <DetailRow label="Insurance no." value={p.insuranceNumber} />
-          <DetailRow label="Address" value={p.address} />
-          <DetailRow label="Next of kin" value={p.nextOfKinName && `${p.nextOfKinName}${p.nextOfKinRelation ? ` (${p.nextOfKinRelation})` : ""}`} />
-          <DetailRow label="Next of kin phone" value={p.nextOfKinPhone} />
+          {!isDoctor && <>
+            <DetailRow label="National ID" value={p.nationalId} />
+            <DetailRow label="Insurance no." value={p.insuranceNumber} />
+            <DetailRow label="Address" value={p.address} />
+            <DetailRow label="Next of kin" value={p.nextOfKinName && `${p.nextOfKinName}${p.nextOfKinRelation ? ` (${p.nextOfKinRelation})` : ""}`} />
+            <DetailRow label="Next of kin phone" value={p.nextOfKinPhone} />
+          </>}
           {(clinical || triageLevel) && <div className="col-span-2"><DetailRow label="Allergies" value={p.allergies} /></div>}
         </div>
       </Card>

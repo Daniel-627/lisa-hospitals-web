@@ -30,6 +30,7 @@ function Consultation() {
   const [newLab, setNewLab] = useState<{ key: number; testName: string; urgency: string; instructions: string }[]>([]);
   const [newRad, setNewRad] = useState<{ key: number; modality: string; bodyPart: string; clinicalInfo: string }[]>([]);
   const [loadError, setLoadError] = useState("");
+  const [catalog, setCatalog] = useState<{ lab: string[]; pharmacy: string[] } | null>(null); // price-list names: ordering from these bills itself
 
   const [notes, setNotes] = useState("");
   const [diagnosis, setDiagnosis] = useState("");
@@ -45,6 +46,7 @@ function Consultation() {
   useEffect(() => {
     departmentsApi.getAll().then(({ data: res }) => setDepts(res.data)).catch(() => {});
     doctorsApi.getAll().then(({ data: res }) => setDocs(res.data)).catch(() => {});
+    staffApi.catalog().then(({ data: res }) => setCatalog(res.data)).catch(() => {}); // optional: the forms still work without it
   }, []);
 
   useEffect(() => {
@@ -276,12 +278,13 @@ function Consultation() {
                 <span><strong>{m.drugName}</strong> · {m.dosage} · {m.frequency} · {m.duration}</span><Pill tone="ok">Dispensed</Pill>
               </div>
             ))}
+            <datalist id="medicines">{(catalog?.pharmacy ?? []).map((m) => <option key={m} value={m} />)}</datalist>
             {rx.map((r) => {
               const hit = allergyHit(r.drugName, tokens);
               return (
                 <div key={r.key} className="p-3 rounded-lg border space-y-3" style={{ borderColor: hit ? "var(--danger)" : "var(--grey-200)" }}>
                   <div className="grid sm:grid-cols-4 gap-3">
-                    <div className="sm:col-span-2"><input aria-label="Medicine" value={r.drugName} disabled={dis} maxLength={200} onChange={(e) => setRow(r.key, { drugName: e.target.value })} className={inputCls} style={inputStyle} placeholder="Medicine" /></div>
+                    <div className="sm:col-span-2"><input aria-label="Medicine" list="medicines" value={r.drugName} disabled={dis} maxLength={200} onChange={(e) => setRow(r.key, { drugName: e.target.value })} className={inputCls} style={inputStyle} placeholder="Medicine" /></div>
                     <input aria-label="Dosage" value={r.dosage} disabled={dis} maxLength={100} onChange={(e) => setRow(r.key, { dosage: e.target.value })} className={inputCls} style={inputStyle} placeholder="Dosage (500 mg)" />
                     <input aria-label="Frequency" value={r.frequency} disabled={dis} maxLength={100} onChange={(e) => setRow(r.key, { frequency: e.target.value })} className={inputCls} style={inputStyle} placeholder="Frequency (3 times daily)" />
                     <input aria-label="Duration" value={r.duration} disabled={dis} maxLength={100} onChange={(e) => setRow(r.key, { duration: e.target.value })} className={inputCls} style={inputStyle} placeholder="Duration (5 days)" />
@@ -319,7 +322,7 @@ function Consultation() {
             {canEdit && (
               <>
                 <datalist id="lab-tests">
-                  {["Full blood count", "Malaria test (rapid or slide)", "Urinalysis", "Random blood sugar", "HIV test", "Pregnancy test", "Liver function tests", "Renal function tests", "Stool microscopy", "Widal test", "Blood group and crossmatch"].map((t) => <option key={t} value={t} />)}
+                  {(catalog?.lab?.length ? catalog.lab : ["Full blood count", "Malaria test (rapid or slide)", "Urinalysis", "Random blood sugar", "HIV test", "Pregnancy test", "Liver function tests", "Renal function tests", "Stool microscopy", "Widal test", "Blood group and crossmatch"]).map((t) => <option key={t} value={t} />)}
                 </datalist>
                 {newLab.map((t) => (
                   <div key={t.key} className="grid sm:grid-cols-6 gap-2 items-center">

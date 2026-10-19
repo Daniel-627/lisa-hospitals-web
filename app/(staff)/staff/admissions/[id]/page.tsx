@@ -22,6 +22,8 @@ function Detail() {
   const [flash, setFlash] = useState("");
   const [busy, setBusy] = useState(false);
 
+  const [wards, setWards] = useState<string[]>([]);
+  useEffect(() => { staffApi.catalog().then(({ data: res }) => setWards(res.data?.ward ?? [])).catch(() => {}); }, []);
   const [ward, setWard] = useState("");
   const [bed, setBed] = useState("");
   const [form, setForm] = useState({ finalDiagnosis: "", treatmentGiven: "", conditionOnDischarge: "", followUpInstructions: "", followUpDate: "" });
@@ -156,7 +158,8 @@ function Detail() {
             <Card className="no-print">
               <h2 className="text-sm font-semibold mb-3" style={{ color: "var(--navy)" }}>Ward and bed</h2>
               <form onSubmit={saveBed} className="space-y-3">
-                <input aria-label="Ward" value={ward} onChange={(e) => setWard(e.target.value)} className={inputCls} style={inputStyle} maxLength={100} />
+                <input aria-label="Ward" list="wards" value={ward} onChange={(e) => setWard(e.target.value)} className={inputCls} style={inputStyle} maxLength={100} />
+                <datalist id="wards">{wards.map((w) => <option key={w} value={w} />)}</datalist>
                 <input aria-label="Bed number" value={bed} onChange={(e) => setBed(e.target.value)} className={inputCls} style={inputStyle} placeholder="Bed number" maxLength={20} />
                 <button type="submit" disabled={busy || !ward.trim()} className={btn} style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Move patient</button>
               </form>

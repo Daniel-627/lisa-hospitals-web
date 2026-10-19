@@ -3,7 +3,7 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import PortalShell from "@/components/PortalShell";
+import PortalShell, { useMe } from "@/components/PortalShell";
 import { Card, ErrorBox, Field, Spinner, inputCls, inputStyle } from "@/components/ui";
 import { departmentsApi, staffApi } from "@/lib/api";
 import { errMsg, hhmm, todayLocal } from "@/lib/format";
@@ -11,6 +11,7 @@ import { errMsg, hhmm, todayLocal } from "@/lib/format";
 type Picked = { id: string; name: string; number: string };
 
 function CheckInForm() {
+  const me = useMe();
   const sp = useSearchParams();
   const prePatient = sp.get("patientId");
   const preAppt = sp.get("appointmentId") ?? "";
@@ -152,7 +153,9 @@ function CheckInForm() {
                 </ul>
               )}
               <p className="text-xs mt-2" style={{ color: "var(--grey-400)" }}>
-                Not registered yet? <Link href="/staff/patients/new" className="font-semibold" style={{ color: "var(--teal)" }}>Register a new patient</Link>
+                {["receptionist", "admin"].includes(me.role)
+                  ? <>Not registered yet? <Link href="/staff/patients/new" className="font-semibold" style={{ color: "var(--teal)" }}>Register a new patient</Link></>
+                  : "Not registered yet? Ask reception to register the patient first."}
               </p>
             </>
           )}

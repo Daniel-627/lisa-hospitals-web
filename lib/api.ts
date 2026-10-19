@@ -98,6 +98,8 @@ export const staffApi = {
   cancelOrder:     (kind: string, id: string) => api.post(`/api/staff/orders/${kind}/${id}/cancel`),
   releaseOrder:    (kind: string, id: string) => api.post(`/api/staff/orders/${kind}/${id}/release`),
   myOrders:        (params?: { released?: boolean }) => api.get("/api/staff/my-orders", { params }),
+  // Names from the price list (no prices) so what is ordered matches what is billed.
+  catalog:         () => api.get("/api/staff/catalog"),
   labWorklist:     (params?: { done?: boolean }) => api.get("/api/staff/lab/worklist", { params }),
   labCollect:      (id: string) => api.post(`/api/staff/lab/orders/${id}/collect`),
   labResult:       (id: string, data: any) => api.post(`/api/staff/lab/orders/${id}/result`, data),
@@ -130,7 +132,11 @@ export const billingApi = {
   createPrice:        (data: { category: string; name: string; unitPrice: number }) => api.post("/api/billing/prices", data),
   updatePrice:        (id: string, data: { unitPrice?: number; isActive?: boolean }) => api.patch(`/api/billing/prices/${id}`, data),
   createInvoice:      (data: any)  => api.post("/api/billing", data),
-  recordPayment:      (id: string, data: any) => api.post(`/api/billing/${id}/payment`, data),
+  // `key` makes the payment safe to send twice: the server records a given key once and returns the same payment on a repeat.
+  recordPayment:      (id: string, data: any, key?: string) => api.post(`/api/billing/${id}/payment`, data, key ? { headers: { "Idempotency-Key": key } } : undefined),
+  // Charges that arrive on their own (orders, medicines, ward days): refresh them, or price a line that had no match.
+  refreshCharges:     (visitId: string) => api.post(`/api/billing/visits/${visitId}/sync`),
+  priceLine:          (id: string, itemId: string, data: { unitPrice: number; remember?: boolean }) => api.patch(`/api/billing/${id}/items/${itemId}`, data),
   addItems:           (id: string, items: any[]) => api.post(`/api/billing/${id}/items`, { items }),
   waive:              (id: string, reason: string) => api.post(`/api/billing/${id}/waive`, { reason }),
   getPatientInvoices: (id: string) => api.get(`/api/billing/patient/${id}`),
