@@ -10,6 +10,16 @@ const isPublicRoute = createRouteMatcher([
   "/services(.*)",
   "/about(.*)",
   "/contact(.*)",
+  "/doctors(.*)",
+  "/news(.*)",
+  "/faq(.*)",
+  // Files for search engines and AI assistants: they never sign in, so these must never be behind the login.
+  "/robots.txt",
+  "/sitemap.xml",
+  "/llms.txt",
+  "/llms-full.txt",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
   "/api/webhook(.*)",
   "/pay(.*)", // Paystack return page: the payer may not be signed in
 ]);

@@ -6,6 +6,7 @@ import { Card, ErrorBox, Field, Pill, Spinner, UrgencyPill, inputCls, inputStyle
 import { staffApi } from "@/lib/api";
 import { errMsg, fmtDateTime } from "@/lib/format";
 import { useWorklist } from "@/lib/useWorklist";
+import { Icon } from "@/components/Icon";
 
 type Row = { analyte: string; result: string; unit: string; referenceRange: string; isAbnormal: boolean };
 const ageOf = (dob?: string) => (dob ? `${new Date().getFullYear() - Number(dob.slice(0, 4))}y` : "");
@@ -45,7 +46,7 @@ function ResultForm({ order, onDone }: { order: any; onDone: () => void }) {
           <input aria-label="Reference range" value={r.referenceRange} onChange={(e) => set(i, { referenceRange: e.target.value })} className={inputCls} style={inputStyle} placeholder="Normal range" maxLength={100} />
           <label className="flex items-center gap-1.5 text-xs" style={{ color: "var(--danger)" }}>
             <input type="checkbox" checked={r.isAbnormal} onChange={(e) => set(i, { isAbnormal: e.target.checked })} /> Abnormal
-            {rows.length > 1 && <button type="button" onClick={() => setRows(rows.filter((_, idx) => idx !== i))} className="ml-2" style={{ color: "var(--grey-400)" }}>✕</button>}
+            {rows.length > 1 && <button type="button" onClick={() => setRows(rows.filter((_, idx) => idx !== i))} className="ml-2" style={{ color: "var(--grey-400)" }}><Icon name="close" /></button>}
           </label>
         </div>
       ))}

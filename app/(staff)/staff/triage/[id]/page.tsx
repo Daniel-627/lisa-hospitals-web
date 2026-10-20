@@ -7,6 +7,8 @@ import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Field, Spinner, inputCls, inputStyle } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { URGENCY, errMsg } from "@/lib/format";
+import { Back } from "@/components/Icon";
+import { Icon } from "@/components/Icon";
 
 const ageOf = (dob?: string) => (dob ? `${new Date().getFullYear() - Number(dob.slice(0, 4))} years` : "");
 const toNum = (v: string) => (v.trim() === "" ? undefined : Number(v));
@@ -47,7 +49,7 @@ function TriageForm() {
     return () => { cancelled = true; };
   }, [id, version]);
 
-  const back = <Link href="/staff/queue" className="text-sm" style={{ color: "var(--teal)" }}>← Back to the queue</Link>;
+  const back = <Link href="/staff/queue" className="text-sm" style={{ color: "var(--teal)" }}><Back />Back to the queue</Link>;
   if (loadError) return <>{back}<div className="mt-4"><ErrorBox>{loadError}</ErrorBox></div></>;
   if (!data) return <Spinner label="Loading..." />;
 
@@ -111,7 +113,7 @@ function TriageForm() {
       </div>
 
       {patient.allergies && (
-        <div className="mb-6 p-3 rounded-lg text-sm font-medium" style={{ background: "#fde8e8", color: "var(--danger)" }}>⚠ Allergies: {patient.allergies}</div>
+        <div className="mb-6 p-3 rounded-lg text-sm font-medium" style={{ background: "#fde8e8", color: "var(--danger)" }}><Icon name="warning" className="mr-1 -mt-0.5" />Allergies: {patient.allergies}</div>
       )}
 
       <form onSubmit={submit} className="max-w-3xl space-y-6" noValidate>

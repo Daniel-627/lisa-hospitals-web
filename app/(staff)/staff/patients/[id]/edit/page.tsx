@@ -8,6 +8,7 @@ import PatientForm from "@/components/PatientForm";
 import { ErrorBox, Spinner } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
+import { Back } from "@/components/Icon";
 
 function Editor() {
   const { id } = useParams<{ id: string }>();
@@ -25,7 +26,7 @@ function Editor() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (error) return <><Link href={`/staff/patients/${id}`} className="text-sm" style={{ color: "var(--teal)" }}>← Back</Link><div className="mt-4"><ErrorBox>{error}</ErrorBox></div></>;
+  if (error) return <><Link href={`/staff/patients/${id}`} className="text-sm" style={{ color: "var(--teal)" }}><Back />Back</Link><div className="mt-4"><ErrorBox>{error}</ErrorBox></div></>;
   if (!patient) return <Spinner label="Loading patient..." />;
   return <PatientForm patient={patient} />;
 }

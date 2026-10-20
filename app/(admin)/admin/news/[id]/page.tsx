@@ -8,6 +8,7 @@ import NewsForm from "@/components/NewsForm";
 import { ErrorBox, Spinner } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
+import { Back } from "@/components/Icon";
 
 function Editor() {
   const { id } = useParams<{ id: string }>();
@@ -22,7 +23,7 @@ function Editor() {
     return () => { cancelled = true; };
   }, [id]);
 
-  if (error) return <><Link href="/admin/news" className="text-sm" style={{ color: "var(--teal)" }}>← All articles</Link><div className="mt-4"><ErrorBox>{error}</ErrorBox></div></>;
+  if (error) return <><Link href="/admin/news" className="text-sm" style={{ color: "var(--teal)" }}><Back />All articles</Link><div className="mt-4"><ErrorBox>{error}</ErrorBox></div></>;
   if (!article) return <Spinner label="Loading article..." />;
   return <NewsForm article={article} />;
 }

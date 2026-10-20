@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import { LogoMark } from "@/components/ui";
 import { BOOK_URL, HOSPITAL } from "@/lib/hospital";
+import { Icon } from "@/components/Icon";
 
 const LINKS = [
   { href: "/", label: "Home" },
@@ -58,7 +59,7 @@ export default function PublicNav() {
           <Link href={BOOK_URL} className="text-sm font-semibold px-4 py-2 rounded-lg text-white hidden sm:block" style={{ background: "var(--teal)" }}>Book Appointment</Link>
           <button type="button" onClick={() => setOpen((o) => !o)} aria-expanded={open} aria-label="Menu"
             className="xl:hidden w-10 h-10 rounded-lg flex items-center justify-center text-white" style={{ background: "rgba(255,255,255,0.1)" }}>
-            {open ? "✕" : "☰"}
+            <Icon name={open ? "close" : "menu"} className="size-5" />
           </button>
         </div>
       </div>

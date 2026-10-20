@@ -4,6 +4,9 @@ import type { Metadata } from "next";
 import { Section, Unavailable } from "@/components/public";
 import { apiGet } from "@/lib/serverApi";
 import { fmtDate } from "@/lib/format";
+import { Back } from "@/components/Icon";
+import JsonLd from "@/components/JsonLd";
+import { articleJsonLd, breadcrumbJsonLd, graph, pageMeta, summarize } from "@/lib/seo";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
@@ -11,7 +14,9 @@ type Props = { params: Promise<{ slug: string }> };
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const { data } = await apiGet<any>(`/api/news/${encodeURIComponent(slug)}`, 60);
-  return data ? { title: `${data.title} — Lisa Hospitals`, description: data.excerpt ?? undefined } : { title: "Article — Lisa Hospitals" };
+  return data
+    ? pageMeta({ title: data.title, description: summarize(data.excerpt || data.body), path: `/news/${slug}`, type: "article", image: data.coverImage || undefined, publishedTime: data.publishedAt || undefined })
+    : { title: "Article", robots: { index: false } };
 }
 
 export default async function ArticlePage({ params }: Props) {
@@ -25,6 +30,10 @@ export default async function ArticlePage({ params }: Props) {
 
   return (
     <article>
+      <JsonLd data={graph(
+        articleJsonLd({ slug, title: data.title, description: summarize(data.excerpt || data.body), image: data.coverImage, publishedAt: data.publishedAt, updatedAt: data.updatedAt }),
+        breadcrumbJsonLd([{ name: "News", path: "/news" }, { name: data.title, path: `/news/${slug}` }]),
+      )} />
       <div className="px-6 pt-12 pb-8 text-center" style={{ background: "var(--navy)" }}>
         <div className="max-w-3xl mx-auto">
           <div className="text-xs font-bold tracking-widest uppercase mb-3" style={{ color: "#5cdde0" }}>
@@ -42,7 +51,7 @@ export default async function ArticlePage({ params }: Props) {
         <div className="space-y-5">
           {paragraphs.map((p, i) => <p key={i} className="text-base leading-relaxed whitespace-pre-line" style={{ color: "var(--navy)" }}>{p}</p>)}
         </div>
-        <div className="mt-12"><Link href="/news" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>← All articles</Link></div>
+        <div className="mt-12"><Link href="/news" className="text-sm font-semibold" style={{ color: "var(--teal)" }}><Back />All articles</Link></div>
       </Section>
     </article>
   );

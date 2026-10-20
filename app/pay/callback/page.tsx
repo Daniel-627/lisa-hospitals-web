@@ -6,6 +6,7 @@ import { useSearchParams } from "next/navigation";
 import { Spinner } from "@/components/ui";
 import { billingApi } from "@/lib/api";
 import { errMsg, fmtKes } from "@/lib/format";
+import { Icon } from "@/components/Icon";
 
 type Result = { status: "success" | "pending" | "failed" | "review"; invoiceNumber?: string; amount?: string };
 
@@ -40,14 +41,14 @@ function Callback() {
   if (!result) return <Spinner label="Checking your payment..." />;
 
   const view =
-    result.status === "success" ? { icon: "✅", title: "Payment received", body: `Thank you. ${fmtKes(result.amount)} has been added to invoice ${result.invoiceNumber}.`, color: "var(--success)" }
-    : result.status === "pending" ? { icon: "⏳", title: "Waiting for confirmation", body: "If you were sent an M-Pesa prompt, enter your PIN on your phone. This page updates by itself.", color: "var(--gold-dark)" }
-    : result.status === "review" ? { icon: "⚠️", title: "We received your payment", body: "It needs a quick check by our billing desk before it shows on your invoice. You won't be charged twice. Please keep your reference below.", color: "var(--gold-dark)" }
-    : { icon: "❌", title: "Payment not completed", body: "No money was taken. You can try again from your invoice.", color: "var(--danger)" };
+    result.status === "success" ? { icon: "success", title: "Payment received", body: `Thank you. ${fmtKes(result.amount)} has been added to invoice ${result.invoiceNumber}.`, color: "var(--success)" }
+    : result.status === "pending" ? { icon: "pending", title: "Waiting for confirmation", body: "If you were sent an M-Pesa prompt, enter your PIN on your phone. This page updates by itself.", color: "var(--gold-dark)" }
+    : result.status === "review" ? { icon: "warning", title: "We received your payment", body: "It needs a quick check by our billing desk before it shows on your invoice. You won't be charged twice. Please keep your reference below.", color: "var(--gold-dark)" }
+    : { icon: "failed", title: "Payment not completed", body: "No money was taken. You can try again from your invoice.", color: "var(--danger)" };
 
   return (
     <div className={box} style={wrap}>
-      <div className="text-4xl mb-3" aria-hidden>{view.icon}</div>
+      <div className="text-5xl mb-3 flex justify-center" style={{ color: view.color }} aria-hidden><Icon name={view.icon} /></div>
       <h1 className="text-xl font-semibold mb-2" style={{ color: view.color, fontFamily: "var(--font-display)" }}>{view.title}</h1>
       <p className="text-sm mb-4" style={{ color: "var(--grey-500)" }}>{view.body}</p>
       <p className="text-xs mb-6 break-all" style={{ color: "var(--grey-400)" }}>Reference: {reference}</p>

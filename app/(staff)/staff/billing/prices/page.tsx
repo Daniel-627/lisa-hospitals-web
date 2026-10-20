@@ -7,6 +7,7 @@ import { PRICE_CATEGORIES, type PriceItem } from "@/components/PricePicker";
 import { Card, ErrorBox, Field, Pill, Spinner, inputCls, inputStyle } from "@/components/ui";
 import { billingApi } from "@/lib/api";
 import { errMsg, fmtKes } from "@/lib/format";
+import { Back } from "@/components/Icon";
 
 function Prices() {
   const [items, setItems] = useState<PriceItem[] | null>(null);
@@ -107,7 +108,7 @@ function Prices() {
 export default function PricesPage() {
   return (
     <PortalShell audience="staff" title={<>Price <em className="italic" style={{ color: "var(--teal)" }}>List</em></>} subtitle="What the hospital charges for each service">
-      <Link href="/staff/billing" className="text-sm font-semibold mb-4 inline-block" style={{ color: "var(--teal)" }}>← Billing desk</Link>
+      <Link href="/staff/billing" className="text-sm font-semibold mb-4 inline-block" style={{ color: "var(--teal)" }}><Back />Billing desk</Link>
       <Prices />
     </PortalShell>
   );

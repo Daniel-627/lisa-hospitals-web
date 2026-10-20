@@ -6,6 +6,9 @@ import DoctorCard from "@/components/DoctorCard";
 import { apiGet } from "@/lib/serverApi";
 import { DEPARTMENTS, deptMeta, toApiSlug, toUrlSlug } from "@/lib/departments";
 import { BOOK_URL, HOSPITAL } from "@/lib/hospital";
+import { Back } from "@/components/Icon";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, graph, pageMeta, departmentJsonLd } from "@/lib/seo";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
@@ -15,8 +18,11 @@ export function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const meta = deptMeta(toApiSlug((await params).slug));
-  return meta ? { title: `${meta.name} — Lisa Hospitals`, description: meta.blurb } : { title: "Service not found" };
+  const slug = (await params).slug;
+  const meta = deptMeta(toApiSlug(slug));
+  return meta
+    ? pageMeta({ title: `${meta.name} in Kisumu`, description: `${meta.blurb} ${meta.is24 ? "Open 24 hours. " : ""}Lisa Hospitals, Nairobi Highway, Kisumu.`, path: `/services/${slug}` })
+    : { title: "Service not found", robots: { index: false } };
 }
 
 export default async function ServicePage({ params }: Props) {
@@ -33,9 +39,15 @@ export default async function ServicePage({ params }: Props) {
   const is24 = d?.isOpen24hrs ?? meta.is24;
   const bookHref = d?.id ? `${BOOK_URL}?department=${d.id}` : BOOK_URL;
 
+  const path = `/services/${toUrlSlug(apiSlug)}`;
+
   return (
     <>
-      <PageHero eyebrow={`${meta.icon}  Department`} title={d?.name ?? meta.name} subtitle={meta.short} />
+      <JsonLd data={graph(
+        departmentJsonLd({ name: d?.name ?? meta.name, description: d?.description || meta.blurb, path, is24 }),
+        breadcrumbJsonLd([{ name: "Services", path: "/services" }, { name: d?.name ?? meta.name, path }]),
+      )} />
+      <PageHero eyebrow="Department" title={d?.name ?? meta.name} subtitle={meta.short} />
       <Section>
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
@@ -75,7 +87,7 @@ export default async function ServicePage({ params }: Props) {
           </div>
         )}
 
-        <div className="mt-10"><Link href="/services" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>← All services</Link></div>
+        <div className="mt-10"><Link href="/services" className="text-sm font-semibold" style={{ color: "var(--teal)" }}><Back />All services</Link></div>
       </Section>
     </>
   );

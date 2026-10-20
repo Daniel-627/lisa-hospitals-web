@@ -6,6 +6,7 @@ import { Card, ErrorBox, Pill, Spinner } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
 import { useWorklist } from "@/lib/useWorklist";
+import { Icon } from "@/components/Icon";
 
 const ageOf = (dob?: string) => (dob ? `${new Date().getFullYear() - Number(dob.slice(0, 4))}y` : "");
 const tokens = (a?: string | null) => (a ?? "").split(/[,;\n/]+/).map((s) => s.trim().toLowerCase()).filter((s) => s.length >= 3);
@@ -59,7 +60,7 @@ function PharmacyBoard() {
                     </button>
                   )}
                 </div>
-                {p.allergies && <div className="p-2.5 rounded-lg text-xs font-medium" style={{ background: "#fde8e8", color: "var(--danger)" }}>⚠ Allergies: {p.allergies}</div>}
+                {p.allergies && <div className="p-2.5 rounded-lg text-xs font-medium" style={{ background: "#fde8e8", color: "var(--danger)" }}><Icon name="warning" className="mr-1 -mt-0.5" />Allergies: {p.allergies}</div>}
                 <div className="space-y-2">
                   {items.map((it) => {
                     const flag = hit(it.drugName, toks);
@@ -68,7 +69,7 @@ function PharmacyBoard() {
                         <div className="text-sm min-w-0" style={{ color: "var(--navy)" }}>
                           <strong>{it.drugName}</strong> · {it.dosage} · {it.frequency} · {it.duration}
                           {it.instructions && <div className="text-xs" style={{ color: "var(--grey-500)" }}>{it.instructions}</div>}
-                          {flag && <div className="text-xs font-semibold" style={{ color: "var(--danger)" }}>⚠ May match a recorded allergy ({flag}). Check with the doctor before dispensing.</div>}
+                          {flag && <div className="text-xs font-semibold" style={{ color: "var(--danger)" }}><Icon name="warning" className="mr-1 -mt-0.5" />May match a recorded allergy ({flag}). Check with the doctor before dispensing.</div>}
                         </div>
                         {it.isDispensed ? <Pill tone="ok">Dispensed</Pill> : (
                           <button disabled={busy === p.patientId} onClick={() => dispenseMany([it])} className="px-3 py-1.5 rounded-lg text-xs font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>Dispense</button>

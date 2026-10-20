@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useAuth } from "@clerk/nextjs";
 import PortalShell from "@/components/PortalShell";
 import { departmentsApi, appointmentsApi, doctorsApi } from "@/lib/api";
+import { Icon } from "@/components/Icon";
 
 const TIME_SLOTS = [
   "08:00", "08:30", "09:00", "09:30", "10:00", "10:30",
@@ -120,7 +121,7 @@ function BookForm() {
                   background: step > i + 1 ? "var(--teal)" : step === i + 1 ? "var(--navy)" : "var(--grey-200)",
                   color: step >= i + 1 ? "white" : "var(--grey-400)",
                 }}>
-                  {step > i + 1 ? "✓" : i + 1}
+                  {step > i + 1 ? <Icon name="check" /> : i + 1}
                 </div>
                 <span className="text-xs font-medium hidden md:block" style={{ color: step === i + 1 ? "var(--navy)" : "var(--grey-400)" }}>{s}</span>
               </div>
@@ -226,7 +227,7 @@ function BookForm() {
             </div>
 
             <div className="p-4 rounded-lg mb-6 text-sm" style={{ background: "var(--teal-light)", color: "var(--teal-dark)" }}>
-              ℹ️ You will receive an SMS confirmation on your registered phone number.
+              <Icon name="info" className="mr-1.5 -mt-0.5" />You will receive an SMS confirmation on your registered phone number.
             </div>
 
             <div className="flex gap-3">

@@ -7,6 +7,7 @@ import PortalShell, { useMe } from "@/components/PortalShell";
 import { Card, DetailRow, ErrorBox, Field, Pill, Spinner, SuccessBox, inputCls, inputStyle } from "@/components/ui";
 import { adminApi, departmentsApi } from "@/lib/api";
 import { DAYS, ROLES, errMsg, fmtDate, hhmm, roleLabel, todayLocal } from "@/lib/format";
+import { Back } from "@/components/Icon";
 
 type Dept = { id: string; name: string };
 
@@ -221,7 +222,7 @@ function UserDetail() {
   }, [id, version]);
 
   const refresh = (msg?: string) => { setFlash(msg ?? ""); setVersion((v) => v + 1); };
-  const back = <Link href="/admin/users" className="text-sm" style={{ color: "var(--teal)" }}>← All users</Link>;
+  const back = <Link href="/admin/users" className="text-sm" style={{ color: "var(--teal)" }}><Back />All users</Link>;
 
   if (error) return <>{back}<div className="mt-4"><ErrorBox>{error}</ErrorBox></div></>;
   if (!detail) return <Spinner label="Loading user..." />;

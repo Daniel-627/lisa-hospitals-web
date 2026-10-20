@@ -37,7 +37,7 @@ function Stays() {
                 <div className="flex items-center justify-between gap-3 flex-wrap">
                   <div>
                     <div className="font-semibold text-sm" style={{ color: "var(--navy)" }}>{a.department} · {a.ward}{a.bedNumber ? `, bed ${a.bedNumber}` : ""}</div>
-                    <div className="text-xs" style={{ color: "var(--grey-500)" }}>{fmtDateTime(a.admittedAt)}{a.dischargedAt ? ` → ${fmtDateTime(a.dischargedAt)}` : ""} · Dr. {a.admittedByFirst} {a.admittedByLast}</div>
+                    <div className="text-xs" style={{ color: "var(--grey-500)" }}>{fmtDateTime(a.admittedAt)}{a.dischargedAt ? ` to ${fmtDateTime(a.dischargedAt)}` : ""} · Dr. {a.admittedByFirst} {a.admittedByLast}</div>
                   </div>
                   <div className="flex items-center gap-2">
                     <Pill tone={a.status === "admitted" ? "warn" : "ok"}>{a.status === "admitted" ? "In hospital" : "Discharged"}</Pill>

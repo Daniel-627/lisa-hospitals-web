@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 
 import { BOOK_URL } from "@/lib/hospital";
+import { ArrowLeft, ArrowRight } from "lucide-react";
 
 interface HeroSlide {
   eyebrow: string;
@@ -236,7 +237,7 @@ export function HeroCarousel() {
               border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
-            ←
+            <ArrowLeft aria-hidden="true" className="size-5" />
           </button>
 
           <button
@@ -249,7 +250,7 @@ export function HeroCarousel() {
               border: "1px solid rgba(255,255,255,0.2)",
             }}
           >
-            →
+            <ArrowRight aria-hidden="true" className="size-5" />
           </button>
         </div>
       </div>

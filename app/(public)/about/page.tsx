@@ -2,23 +2,28 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { PageHero, Section } from "@/components/public";
 import { BOOK_URL, HOSPITAL } from "@/lib/hospital";
+import { Icon } from "@/components/Icon";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, graph, pageMeta } from "@/lib/seo";
 
-export const metadata: Metadata = {
-  title: "About Us — Lisa Hospitals",
-  description: "Lisa Hospitals is a 24-hour hospital on Nairobi Highway, Kisumu, offering comprehensive care for the whole family.",
-};
+export const metadata: Metadata = pageMeta({
+  title: "About Us",
+  description: "Lisa Hospitals is a 24-hour hospital on Nairobi Highway, Kisumu, Kenya, offering emergency, outpatient, inpatient, maternity and specialist care. No referral needed. SHA, Maki, AON and M-Tiba accepted.",
+  path: "/about",
+});
 
 // NOTE: replace this copy with the hospital's own story, mission and leadership when you have it.
 const values = [
-  { icon: "🤝", title: "Compassion", text: "We treat every patient the way we would want our own family treated." },
-  { icon: "🎯", title: "Excellence", text: "Careful, evidence-based care delivered by a dedicated clinical team." },
-  { icon: "🔓", title: "Access", text: "Open 24 hours, no referrals needed, and we accept major insurance schemes." },
-  { icon: "🔒", title: "Trust", text: "Your health information is handled with care and kept confidential." },
+  { icon: "compassion", title: "Compassion", text: "We treat every patient the way we would want our own family treated." },
+  { icon: "excellence", title: "Excellence", text: "Careful, evidence-based care delivered by a dedicated clinical team." },
+  { icon: "access", title: "Access", text: "Open 24 hours, no referrals needed, and we accept major insurance schemes." },
+  { icon: "trust", title: "Trust", text: "Your health information is handled with care and kept confidential." },
 ];
 
 export default function AboutPage() {
   return (
     <>
+      <JsonLd data={graph(breadcrumbJsonLd([{ name: "About", path: "/about" }]))} />
       <PageHero eyebrow="About us" title="Caring for Kisumu," accent="around the clock" subtitle={`${HOSPITAL.name} — ${HOSPITAL.tagline}.`} />
 
       <Section narrow>
@@ -37,7 +42,7 @@ export default function AboutPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {values.map((v) => (
               <div key={v.title} className="p-6 rounded-xl border" style={{ borderColor: "var(--grey-200)", background: "white" }}>
-                <div className="text-2xl mb-3" aria-hidden>{v.icon}</div>
+                <div className="text-2xl mb-3" style={{ color: "var(--teal)" }} aria-hidden><Icon name={v.icon} /></div>
                 <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--navy)" }}>{v.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--grey-500)" }}>{v.text}</p>
               </div>

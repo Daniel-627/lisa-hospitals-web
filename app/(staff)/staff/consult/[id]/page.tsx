@@ -7,6 +7,7 @@ import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Field, Pill, Spinner, SuccessBox, UrgencyPill, inputCls, inputStyle } from "@/components/ui";
 import { departmentsApi, doctorsApi, staffApi } from "@/lib/api";
 import { URGENCY, errMsg, fmtDate, fmtDateTime, todayLocal } from "@/lib/format";
+import { Back, Icon } from "@/components/Icon";
 
 type Rx = { key: number; drugName: string; dosage: string; frequency: string; duration: string; instructions: string };
 
@@ -67,7 +68,7 @@ function Consultation() {
     return () => { cancelled = true; };
   }, [id, version]);
 
-  const back = <Link href="/staff/queue" className="text-sm" style={{ color: "var(--teal)" }}>← Back to the queue</Link>;
+  const back = <Link href="/staff/queue" className="text-sm" style={{ color: "var(--teal)" }}><Back />Back to the queue</Link>;
   if (loadError) return <>{back}<div className="mt-4"><ErrorBox>{loadError}</ErrorBox></div></>;
   if (!data) return <Spinner label="Loading consultation..." />;
 
@@ -174,7 +175,7 @@ function Consultation() {
         <Link href={`/staff/patients/${patient.id}`} className="px-4 py-2 rounded-lg text-xs font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Full patient file</Link>
       </div>
 
-      {patient.allergies && <div className="mb-6 p-3 rounded-lg text-sm font-medium" style={{ background: "#fde8e8", color: "var(--danger)" }}>⚠ Allergies: {patient.allergies}</div>}
+      {patient.allergies && <div className="mb-6 p-3 rounded-lg text-sm font-medium" style={{ background: "#fde8e8", color: "var(--danger)" }}><Icon name="warning" className="mr-1 -mt-0.5" />Allergies: {patient.allergies}</div>}
       {banner && (
         <div className="mb-6 p-3 rounded-lg text-sm flex items-center justify-between gap-3 flex-wrap" style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>
           <span>{banner}</span>
@@ -291,7 +292,7 @@ function Consultation() {
                     <div className="sm:col-span-2"><input aria-label="Instructions" value={r.instructions} disabled={dis} maxLength={1000} onChange={(e) => setRow(r.key, { instructions: e.target.value })} className={inputCls} style={inputStyle} placeholder="Instructions (after meals…)" /></div>
                     {!dis && <button type="button" onClick={() => setRx(rx.filter((x) => x.key !== r.key))} className="text-xs font-semibold text-left sm:text-right" style={{ color: "var(--danger)" }}>Remove</button>}
                   </div>
-                  {hit && <p className="text-xs font-semibold" style={{ color: "var(--danger)" }}>⚠ May match this patient&apos;s recorded allergy: {hit}. Please check before prescribing.</p>}
+                  {hit && <p className="text-xs font-semibold" style={{ color: "var(--danger)" }}><Icon name="warning" className="mr-1 -mt-0.5" />May match this patient&apos;s recorded allergy: {hit}. Please check before prescribing.</p>}
                 </div>
               );
             })}

@@ -8,6 +8,7 @@ import DischargeSheet from "@/components/DischargeSheet";
 import { Card, ErrorBox, Field, Pill, Spinner, SuccessBox, inputCls, inputStyle } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { PAY_STATUS, errMsg, fmtDateTime, fmtKes, owed, todayLocal } from "@/lib/format";
+import { Back } from "@/components/Icon";
 
 const btn = "px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60";
 
@@ -101,7 +102,7 @@ function Detail() {
   return (
     <>
       <div className="no-print">
-        <Link href="/staff/admissions" className="text-sm" style={{ color: "var(--teal)" }}>← Admissions</Link>
+        <Link href="/staff/admissions" className="text-sm" style={{ color: "var(--teal)" }}><Back />Admissions</Link>
         {error && <div className="mt-4"><ErrorBox>{error}</ErrorBox></div>}
         {flash && <div className="mt-4"><SuccessBox>{flash}</SuccessBox></div>}
       </div>

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { HOSPITAL } from "@/lib/hospital";
 import { DEPARTMENTS, toUrlSlug } from "@/lib/departments";
+import { Next } from "@/components/Icon";
 
 const col = "text-xs font-bold tracking-widest uppercase mb-4";
 const link = "text-xs hover:underline";
@@ -25,7 +26,7 @@ export default function PublicFooter() {
             {DEPARTMENTS.filter((d) => ["accident_emergency", "maternity", "laboratory", "pharmacy", "critical_care_icu"].includes(d.slug)).map((d) => (
               <li key={d.slug}><Link href={`/services/${toUrlSlug(d.slug)}`} className={link} style={{ color: "rgba(255,255,255,0.5)" }}>{d.name}</Link></li>
             ))}
-            <li><Link href="/services" className={link} style={{ color: "var(--teal)" }}>All services →</Link></li>
+            <li><Link href="/services" className={link} style={{ color: "var(--teal)" }}>All services<Next /></Link></li>
           </ul>
         </div>
 

@@ -6,14 +6,15 @@ import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Spinner, StatusBadge } from "@/components/ui";
 import { appointmentsApi, patientsApi } from "@/lib/api";
 import { errMsg, fmtDate, hhmm, insuranceLabel } from "@/lib/format";
+import { Icon, Next } from "@/components/Icon";
 
 const quickActions = [
-  { label: "Book Appointment", icon: "📅", href: "/patient/appointments/book" },
-  { label: "My Documents",     icon: "📄", href: "/patient/documents" },
-  { label: "My Results",       icon: "🧪", href: "/patient/results" },
-  { label: "My Profile",       icon: "👤", href: "/patient/profile" },
-  { label: "My Invoices",      icon: "💳", href: "/patient/invoices" },
-  { label: "Hospital Stays",   icon: "🛏️", href: "/patient/admissions" },
+  { label: "Book Appointment", icon: "appointments", href: "/patient/appointments/book" },
+  { label: "My Documents",     icon: "documents", href: "/patient/documents" },
+  { label: "My Results",       icon: "results", href: "/patient/results" },
+  { label: "My Profile",       icon: "profile", href: "/patient/profile" },
+  { label: "My Invoices",      icon: "invoices", href: "/patient/invoices" },
+  { label: "Hospital Stays",   icon: "admissions", href: "/patient/admissions" },
 ];
 
 function Content() {
@@ -70,7 +71,7 @@ function Content() {
       <>
         {error && <ErrorBox>{error}</ErrorBox>}
         <Card className="max-w-lg text-center !p-8">
-          <div className="text-3xl mb-3" aria-hidden>🩺</div>
+          <div className="text-3xl mb-3 flex justify-center" style={{ color: "var(--teal)" }} aria-hidden><Icon name="specialist" /></div>
           <h2 className="text-lg font-semibold mb-2" style={{ color: "var(--navy)" }}>Set up your patient profile</h2>
           <p className="text-sm mb-5" style={{ color: "var(--grey-500)" }}>
             You work here, but you can also be a patient. Create a patient profile to book appointments and keep your own health records. Your colleagues can&apos;t see them unless they are treating you.
@@ -100,12 +101,12 @@ function Content() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         {quickActions.map((a) => a.href ? (
           <Link key={a.label} href={a.href} className="p-5 rounded-xl border text-center transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
-            <div className="text-2xl mb-2">{a.icon}</div>
+            <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={a.icon} /></div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
           </Link>
         ) : (
           <div key={a.label} className="p-5 rounded-xl border text-center opacity-60" style={{ borderColor: "var(--grey-200)", background: "white" }}>
-            <div className="text-2xl mb-2">{a.icon}</div>
+            <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={a.icon} /></div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
             <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>Coming soon</div>
           </div>
@@ -121,7 +122,7 @@ function Content() {
         {upcoming.length === 0 ? (
           <div className="p-8 rounded-xl border text-center" style={{ borderColor: "var(--grey-200)" }}>
             <p className="text-sm mb-3" style={{ color: "var(--grey-500)" }}>No upcoming appointments</p>
-            <Link href="/patient/appointments/book" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>Book your first appointment →</Link>
+            <Link href="/patient/appointments/book" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>Book your first appointment<Next /></Link>
           </div>
         ) : (
           <div className="space-y-3">

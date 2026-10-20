@@ -7,6 +7,7 @@ import PortalShell, { useMe } from "@/components/PortalShell";
 import { Card, DetailRow, ErrorBox, Pill, Spinner, StatusBadge, inputCls, inputStyle } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { docLabel, errMsg, fmtDate, fmtDateTime, hhmm, insuranceLabel } from "@/lib/format";
+import { Back, Icon } from "@/components/Icon";
 
 type Denied = {
   patient: { id: string; firstName: string; lastName: string; patientNumber: string };
@@ -102,7 +103,7 @@ function PatientDetail() {
     return () => { cancelled = true; };
   }, [id, version]);
 
-  const back = <Link href="/staff/patients" className="text-sm" style={{ color: "var(--teal)" }}>← All patients</Link>;
+  const back = <Link href="/staff/patients" className="text-sm" style={{ color: "var(--teal)" }}><Back />All patients</Link>;
 
   if (error) return <>{back}<div className="mt-4"><ErrorBox>{error}</ErrorBox></div></>;
 
@@ -111,7 +112,7 @@ function PatientDetail() {
       <>
         {back}
         <Card className="max-w-xl mt-4 !p-8 text-center space-y-5">
-          <div className="text-3xl" aria-hidden>🔒</div>
+          <div className="text-3xl flex justify-center" style={{ color: "var(--teal)" }} aria-hidden><Icon name="trust" /></div>
           <div>
             <h2 className="text-xl font-semibold" style={{ color: "var(--navy)" }}>{denied.patient.firstName} {denied.patient.lastName}</h2>
             <p className="text-sm" style={{ color: "var(--grey-500)" }}>{denied.patient.patientNumber}</p>

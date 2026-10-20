@@ -9,6 +9,7 @@ import PayOnline from "@/components/PayOnline";
 import { Card, ErrorBox, Field, Pill, Spinner, SuccessBox, inputCls, inputStyle } from "@/components/ui";
 import { billingApi } from "@/lib/api";
 import { CLAIM_SCHEMES, INSURANCE, ONLINE_STATUS, errMsg, fmtDate, fmtDateTime, fmtKes, insuranceLabel, owed } from "@/lib/format";
+import { Back, Icon } from "@/components/Icon";
 
 const btn = "px-4 py-2.5 rounded-lg text-sm font-semibold disabled:opacity-60";
 const primary = { background: "var(--teal)", color: "white" };
@@ -99,7 +100,7 @@ function Detail() {
   return (
     <>
       <div className="no-print">
-        <Link href="/staff/billing" className="text-sm" style={{ color: "var(--teal)" }}>← All invoices</Link>
+        <Link href="/staff/billing" className="text-sm" style={{ color: "var(--teal)" }}><Back />All invoices</Link>
         {error && <div className="mt-4"><ErrorBox>{error}</ErrorBox></div>}
         {flash && <div className="mt-4"><SuccessBox>{flash}</SuccessBox></div>}
       </div>
@@ -191,7 +192,7 @@ function Detail() {
                     <input aria-label="Description" value={l.description} onChange={(e) => setExtra((x) => x.map((y) => y.key === l.key ? { ...y, description: e.target.value } : y))} className={`${inputCls} col-span-12`} style={inputStyle} placeholder="Description" maxLength={300} />
                     <input aria-label="Quantity" value={l.quantity} onChange={(e) => setExtra((x) => x.map((y) => y.key === l.key ? { ...y, quantity: e.target.value } : y))} className={`${inputCls} col-span-4`} style={inputStyle} inputMode="numeric" placeholder="Qty" />
                     <input aria-label="Unit price" value={l.unitPrice} onChange={(e) => setExtra((x) => x.map((y) => y.key === l.key ? { ...y, unitPrice: e.target.value } : y))} className={`${inputCls} col-span-6`} style={inputStyle} inputMode="decimal" placeholder="Unit price" />
-                    <button type="button" aria-label="Remove" onClick={() => setExtra((x) => x.filter((y) => y.key !== l.key))} className="col-span-2 text-sm" style={{ color: "var(--danger)" }}>✕</button>
+                    <button type="button" aria-label="Remove" onClick={() => setExtra((x) => x.filter((y) => y.key !== l.key))} className="col-span-2 text-sm" style={{ color: "var(--danger)" }}><Icon name="close" /></button>
                   </div>
                 ))}
                 <div className="flex gap-2 flex-wrap">

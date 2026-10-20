@@ -9,6 +9,7 @@ import PayOnline from "@/components/PayOnline";
 import { ErrorBox, Spinner } from "@/components/ui";
 import { billingApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
+import { Back } from "@/components/Icon";
 
 function Detail() {
   const { id } = useParams<{ id: string }>();
@@ -27,7 +28,7 @@ function Detail() {
   if (!inv) return <Spinner label="Loading invoice..." />;
   return (
     <div className="max-w-3xl">
-      <Link href="/patient/invoices" className="text-sm no-print" style={{ color: "var(--teal)" }}>← My invoices</Link>
+      <Link href="/patient/invoices" className="text-sm no-print" style={{ color: "var(--teal)" }}><Back />My invoices</Link>
       <div className="mt-4"><InvoiceSheet inv={inv} /></div>
       <div className="mt-4"><PayOnline inv={inv} /></div>
       <button onClick={() => window.print()} className="no-print mt-4 px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Print / save as PDF</button>

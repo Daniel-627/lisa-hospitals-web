@@ -5,6 +5,9 @@ import { PageHero, Section, Unavailable } from "@/components/public";
 import { apiGet } from "@/lib/serverApi";
 import { BOOK_URL } from "@/lib/hospital";
 import { DAYS, fmtMoney, hhmm } from "@/lib/format";
+import { Back } from "@/components/Icon";
+import JsonLd from "@/components/JsonLd";
+import { breadcrumbJsonLd, graph, pageMeta, physicianJsonLd } from "@/lib/seo";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ id: string }> };
@@ -12,11 +15,15 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  if (!UUID.test(id)) return { title: "Doctor not found" };
+  if (!UUID.test(id)) return { title: "Doctor not found", robots: { index: false } };
   const { data } = await apiGet<any>(`/api/doctors/${id}`);
   return data
-    ? { title: `Dr. ${data.firstName} ${data.lastName} — Lisa Hospitals`, description: `${data.speciality} at Lisa Hospitals, Kisumu.` }
-    : { title: "Doctor — Lisa Hospitals" };
+    ? pageMeta({
+        title: `Dr. ${data.firstName} ${data.lastName}, ${data.speciality}`,
+        description: `Dr. ${data.firstName} ${data.lastName} is a ${String(data.speciality).toLowerCase()} at Lisa Hospitals, Nairobi Highway, Kisumu${data.department ? ` (${data.department})` : ""}. View availability and book an appointment.`,
+        path: `/doctors/${id}`, image: data.photoUrl || undefined,
+      })
+    : { title: "Doctor" };
 }
 
 export default async function DoctorPage({ params }: Props) {
@@ -33,6 +40,10 @@ export default async function DoctorPage({ params }: Props) {
 
   return (
     <>
+      <JsonLd data={graph(
+        physicianJsonLd({ id, firstName: d.firstName, lastName: d.lastName, speciality: d.speciality, department: d.department, photoUrl: d.photoUrl }),
+        breadcrumbJsonLd([{ name: "Doctors", path: "/doctors" }, { name: `Dr. ${d.firstName} ${d.lastName}`, path: `/doctors/${id}` }]),
+      )} />
       <PageHero eyebrow={d.department} title={`Dr. ${d.firstName} ${d.lastName}`} subtitle={d.speciality} />
       <Section narrow>
         <div className="flex items-center gap-5 mb-8">
@@ -71,7 +82,7 @@ export default async function DoctorPage({ params }: Props) {
         <Link href={`${BOOK_URL}?department=${d.departmentId}&doctor=${d.id}`} className="inline-block px-8 py-3.5 rounded-lg text-sm font-semibold text-white" style={{ background: "var(--teal)" }}>
           Book with Dr. {d.lastName}
         </Link>
-        <div className="mt-8"><Link href="/doctors" className="text-sm font-semibold" style={{ color: "var(--teal)" }}>← All doctors</Link></div>
+        <div className="mt-8"><Link href="/doctors" className="text-sm font-semibold" style={{ color: "var(--teal)" }}><Back />All doctors</Link></div>
       </Section>
     </>
   );

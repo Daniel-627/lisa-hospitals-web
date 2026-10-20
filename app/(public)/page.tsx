@@ -5,11 +5,16 @@ import { Badge24 } from "@/components/public";
 import { HeroCarousel } from "@/components/HeroCarousel";
 import { BOOK_URL, HOSPITAL } from "@/lib/hospital";
 import { DEPARTMENTS, toUrlSlug } from "@/lib/departments";
+import { pageMeta } from "@/lib/seo";
+import { Icon, Next } from "@/components/Icon";
 
 export const metadata: Metadata = {
-  title: "Lisa Hospitals — Your Health, Our Priority",
-  description:
-    "Comprehensive 24-hour healthcare in Kisumu: emergency care, specialist clinics, maternity, laboratory, pharmacy and more.",
+  ...pageMeta({
+    title: "24-Hour Hospital in Kisumu, Kenya",
+    description: "Lisa Hospitals on Nairobi Highway, Kisumu: 24-hour emergency care, outpatient and inpatient, maternity, ICU, laboratory, pharmacy, radiology, dental and eye care. SHA, Maki, AON and M-Tiba accepted.",
+    path: "/",
+  }),
+  title: { absolute: "Lisa Hospitals | 24-Hour Hospital in Kisumu, Kenya" },
 };
 
 const stats = [
@@ -79,10 +84,11 @@ export default function HomePage() {
                   className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl text-xl transition-transform duration-300 group-hover:scale-110"
                   style={{
                     background: "var(--teal-light)",
+                    color: "var(--teal-dark)",
                   }}
                   aria-hidden
                 >
-                  {service.icon}
+                  <Icon name={service.icon} />
                 </div>
 
                 <h3
@@ -109,7 +115,7 @@ export default function HomePage() {
                   className="mt-4 text-[11px] font-bold uppercase tracking-wider opacity-0 transition-opacity group-hover:opacity-100"
                   style={{ color: "var(--teal)" }}
                 >
-                  Learn more →
+                  Learn more<Next />
                 </div>
               </Link>
             ))}

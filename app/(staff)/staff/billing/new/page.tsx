@@ -8,6 +8,7 @@ import PricePicker, { type PriceItem } from "@/components/PricePicker";
 import { Card, ErrorBox, Field, Spinner, inputCls, inputStyle } from "@/components/ui";
 import { billingApi, staffApi } from "@/lib/api";
 import { errMsg, fmtKes } from "@/lib/format";
+import { Icon } from "@/components/Icon";
 
 type Line = { key: number; description: string; quantity: string; unitPrice: string };
 
@@ -97,7 +98,7 @@ function NewInvoice() {
               <input aria-label={`Description ${i + 1}`} value={l.description} onChange={(e) => set(l.key, { description: e.target.value })} className={`${inputCls} col-span-12 sm:col-span-6`} style={inputStyle} placeholder="e.g. Ward bed (per day), X-ray, Panadol" maxLength={300} />
               <input aria-label={`Quantity ${i + 1}`} value={l.quantity} onChange={(e) => set(l.key, { quantity: e.target.value })} className={`${inputCls} col-span-4 sm:col-span-2`} style={inputStyle} inputMode="numeric" placeholder="Qty" />
               <input aria-label={`Unit price ${i + 1}`} value={l.unitPrice} onChange={(e) => set(l.key, { unitPrice: e.target.value })} className={`${inputCls} col-span-6 sm:col-span-3`} style={inputStyle} inputMode="decimal" placeholder="Unit price (KES)" />
-              <button type="button" aria-label={`Remove charge ${i + 1}`} disabled={lines.length === 1} onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} className="col-span-2 sm:col-span-1 py-3 text-sm disabled:opacity-30" style={{ color: "var(--danger)" }}>✕</button>
+              <button type="button" aria-label={`Remove charge ${i + 1}`} disabled={lines.length === 1} onClick={() => setLines((ls) => ls.filter((x) => x.key !== l.key))} className="col-span-2 sm:col-span-1 py-3 text-sm disabled:opacity-30" style={{ color: "var(--danger)" }}><Icon name="close" /></button>
             </div>
           ))}
         </div>

@@ -6,6 +6,7 @@ import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Spinner } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { errMsg, roleLabel } from "@/lib/format";
+import { Icon, Next } from "@/components/Icon";
 
 function Content() {
   const [stats, setStats] = useState<any>(null);
@@ -23,12 +24,12 @@ function Content() {
   if (!stats) return <Spinner label="Loading..." />;
 
   const cards = [
-    { label: "Total users", value: stats.totalUsers, href: "/admin/users", icon: "👥" },
-    { label: "Patients", value: stats.patients, href: "/staff/patients", icon: "🧑‍⚕️" },
-    { label: "Pending appointments", value: stats.pendingAppointments, href: "/staff/appointments", icon: "⏳" },
-    { label: "Unread messages", value: stats.unreadEnquiries, href: "/admin/enquiries", icon: "✉️", highlight: stats.unreadEnquiries > 0 },
-    { label: "Published articles", value: stats.publishedPosts, href: "/admin/news", icon: "📰" },
-    { label: "Draft articles", value: stats.draftPosts, href: "/admin/news", icon: "📝" },
+    { label: "Total users", value: stats.totalUsers, href: "/admin/users", icon: "patients" },
+    { label: "Patients", value: stats.patients, href: "/staff/patients", icon: "profile" },
+    { label: "Pending appointments", value: stats.pendingAppointments, href: "/staff/appointments", icon: "pending" },
+    { label: "Unread messages", value: stats.unreadEnquiries, href: "/admin/enquiries", icon: "mail", highlight: stats.unreadEnquiries > 0 },
+    { label: "Published articles", value: stats.publishedPosts, href: "/admin/news", icon: "news" },
+    { label: "Draft articles", value: stats.draftPosts, href: "/admin/news", icon: "draft" },
   ];
 
   return (
@@ -37,7 +38,7 @@ function Content() {
         {cards.map((c) => (
           <Link key={c.label} href={c.href} className="p-5 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5"
             style={{ borderColor: c.highlight ? "var(--teal)" : "var(--grey-200)", background: "white" }}>
-            <div className="text-2xl mb-2" aria-hidden>{c.icon}</div>
+            <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={c.icon} /></div>
             <div className="text-3xl font-bold mb-1" style={{ color: "var(--navy)", fontFamily: "var(--font-display)" }}>{c.value}</div>
             <div className="text-xs" style={{ color: "var(--grey-500)" }}>{c.label}</div>
           </Link>
@@ -55,7 +56,7 @@ function Content() {
               </div>
             ))}
           </div>
-          <Link href="/admin/users" className="inline-block mt-4 text-sm font-semibold" style={{ color: "var(--teal)" }}>Manage users →</Link>
+          <Link href="/admin/users" className="inline-block mt-4 text-sm font-semibold" style={{ color: "var(--teal)" }}>Manage users<Next /></Link>
         </Card>
 
         <Card>
