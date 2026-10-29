@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Card, ErrorBox, Field, inputCls, inputStyle } from "@/components/ui";
 import { adminApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
+import FileUpload from "@/components/FileUpload";
 
 // Used for both "new article" (no `article`) and "edit article".
 export default function NewsForm({ article }: { article?: any }) {
@@ -14,6 +15,7 @@ export default function NewsForm({ article }: { article?: any }) {
   const [excerpt, setExcerpt] = useState(article?.excerpt ?? "");
   const [body, setBody] = useState(article?.body ?? "");
   const [cover, setCover] = useState(article?.coverImage ?? "");
+  const [uploading, setUploading] = useState(false);
   const [published, setPublished] = useState(article?.isPublished ?? false);
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -24,7 +26,6 @@ export default function NewsForm({ article }: { article?: any }) {
     setError("");
     if (title.trim().length < 3) return setError("Enter a title.");
     if (!body.trim()) return setError("Write the article text.");
-    if (cover.trim() && !cover.trim().startsWith("https://")) return setError("The cover image link must start with https://");
     if (slug.trim() && !/^[a-z0-9][a-z0-9-]*$/.test(slug.trim())) return setError("Web address can only use lowercase letters, numbers and hyphens.");
 
     const payload = {
@@ -69,7 +70,7 @@ export default function NewsForm({ article }: { article?: any }) {
           <textarea id="n-body" rows={14} value={body} maxLength={50000} onChange={(e) => setBody(e.target.value)} className={inputCls} style={inputStyle} />
         </Field>
         <div className="grid sm:grid-cols-2 gap-4">
-          <Field label="Cover image link (https)" htmlFor="n-cover" hint="Optional."><input id="n-cover" type="url" value={cover} maxLength={500} onChange={(e) => setCover(e.target.value)} className={inputCls} style={inputStyle} placeholder="https://…" /></Field>
+          <Field label="Cover image" htmlFor="n-cover" hint="Optional."><FileUpload id="n-cover" purpose="news_cover" value={cover} onChange={setCover} onBusyChange={setUploading} /></Field>
           <Field label="Web address" htmlFor="n-slug" hint={article ? "Changing this breaks old links." : "Leave blank to create it from the title."}>
             <input id="n-slug" value={slug} maxLength={300} onChange={(e) => setSlug(e.target.value)} className={inputCls} style={inputStyle} placeholder="my-article-title" />
           </Field>
@@ -80,7 +81,7 @@ export default function NewsForm({ article }: { article?: any }) {
       </Card>
 
       <div className="flex gap-3 flex-wrap items-center">
-        <button type="submit" disabled={saving || deleting} className="px-8 py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-70" style={{ background: saving ? "var(--teal-dark)" : "var(--teal)" }}>
+        <button type="submit" disabled={saving || deleting || uploading} className="px-8 py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-70" style={{ background: saving ? "var(--teal-dark)" : "var(--teal)" }}>
           {saving ? "Saving..." : published ? "Save & publish" : "Save draft"}
         </button>
         <button type="button" onClick={() => router.push("/admin/news")} className="px-6 py-3 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-200)", color: "var(--navy)" }}>Cancel</button>

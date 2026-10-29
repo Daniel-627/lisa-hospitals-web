@@ -13,6 +13,9 @@ const isPublicRoute = createRouteMatcher([
   "/doctors(.*)",
   "/news(.*)",
   "/faq(.*)",
+  "/book(.*)",
+  "/booking(.*)",
+  "/privacy(.*)",
   // Files for search engines and AI assistants: they never sign in, so these must never be behind the login.
   "/robots.txt",
   "/sitemap.xml",

@@ -75,6 +75,11 @@ export const patientsApi = {
 };
 
 // Staff
+// Asks the server for permission to upload one file (see components/FileUpload.tsx).
+export const uploadsApi = {
+  sign: (purpose: string) => api.post("/api/uploads/sign", { purpose }),
+};
+
 export const staffApi = {
   getDashboard:   ()           => api.get("/api/staff/dashboard"),
   getPatients:    (params?: { q?: string; limit?: number; offset?: number }) => api.get("/api/staff/patients", { params }),
@@ -175,4 +180,28 @@ export const adminApi = {
   newsUpdate:          (id: string, data: any)             => api.put(`/api/admin/news/${id}`, data),
   newsDelete:          (id: string)                        => api.delete(`/api/admin/news/${id}`),
   audit:               (params?: Page & { action?: string }) => api.get("/api/admin/audit", { params }),
+};
+
+// Booking (public: no sign-in needed; staff: reception / doctor / admin)
+export type BookingProof = { reference: string; token?: string; phone?: string };
+export const bookingApi = {
+  config:       ()                      => api.get("/api/booking/config"),
+  doctors:      (departmentId?: string) => api.get("/api/booking/doctors", { params: { departmentId } }),
+  availability: (p: { departmentId: string; doctorId?: string; from?: string; to?: string }) => api.get("/api/booking/availability", { params: p }),
+  slots:        (p: { departmentId: string; doctorId?: string; date: string }) => api.get("/api/booking/slots", { params: p }),
+  requestOtp:   (phone: string)         => api.post("/api/booking/otp", { phone }),
+  create:       (data: any)             => api.post("/api/booking/bookings", data),
+  lookup:       (p: BookingProof)       => api.post("/api/booking/manage/lookup", p),
+  cancel:       (p: BookingProof)       => api.post("/api/booking/manage/cancel", p),
+  reschedule:   (p: BookingProof & { date: string; time: string }) => api.post("/api/booking/manage/reschedule", p),
+  // staff
+  staffList:    (params: Record<string, any>) => api.get("/api/booking/staff/bookings", { params }),
+  staffCreate:  (data: any)             => api.post("/api/booking/staff/bookings", data),
+  staffStatus:  (id: string, status: string, reason?: string) => api.patch(`/api/booking/staff/bookings/${id}/status`, { status, reason }),
+  staffMove:    (id: string, data: { date: string; time: string; doctorId?: string }) => api.post(`/api/booking/staff/bookings/${id}/reschedule`, data),
+  timeOff:      (doctorId?: string)     => api.get("/api/booking/staff/time-off", { params: { doctorId } }),
+  addTimeOff:   (data: any)             => api.post("/api/booking/staff/time-off", data),
+  deleteTimeOff:(id: string)            => api.delete(`/api/booking/staff/time-off/${id}`),
+  settings:     ()                      => api.get("/api/booking/staff/settings"),
+  saveSettings: (data: any)             => api.put("/api/booking/staff/settings", data),
 };

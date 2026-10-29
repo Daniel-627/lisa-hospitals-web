@@ -8,6 +8,7 @@ import { Card, DetailRow, ErrorBox, Field, Pill, Spinner, SuccessBox, inputCls, 
 import { adminApi, departmentsApi } from "@/lib/api";
 import { DAYS, ROLES, errMsg, fmtDate, hhmm, roleLabel, todayLocal } from "@/lib/format";
 import { Back } from "@/components/Icon";
+import FileUpload from "@/components/FileUpload";
 
 type Dept = { id: string; name: string };
 
@@ -111,6 +112,7 @@ function DoctorCard({ user, doctor, depts, refresh }: { user: any; doctor: any; 
   const [speciality, setSpeciality] = useState(doctor?.speciality ?? "");
   const [bio, setBio] = useState(doctor?.bio ?? "");
   const [photo, setPhoto] = useState(doctor?.photoUrl ?? "");
+  const [uploading, setUploading] = useState(false);
   const [fee, setFee] = useState(doctor?.consultationFee ? String(Number(doctor.consultationFee)) : "");
   const [available, setAvailable] = useState(doctor?.isAvailable ?? true);
   const [localError, setLocalError] = useState("");
@@ -120,7 +122,6 @@ function DoctorCard({ user, doctor, depts, refresh }: { user: any; doctor: any; 
     if (!dept) return "Choose a department.";
     if (speciality.trim().length < 2) return "Enter the doctor's speciality.";
     if (feeNumber !== null && (!Number.isFinite(feeNumber) || feeNumber < 0)) return "Enter a valid consultation fee, or leave it blank.";
-    if (photo.trim() && !photo.trim().startsWith("https://")) return "The photo link must start with https://";
     return "";
   };
 
@@ -149,7 +150,7 @@ function DoctorCard({ user, doctor, depts, refresh }: { user: any; doctor: any; 
         <Field label="Department" htmlFor="dr-dept"><DeptSelect id="dr-dept" value={dept} onChange={setDept} depts={depts} required /></Field>
         <Field label="Speciality" htmlFor="dr-spec"><input id="dr-spec" value={speciality} maxLength={200} onChange={(e) => setSpeciality(e.target.value)} className={inputCls} style={inputStyle} placeholder="e.g. Obstetrician & Gynaecologist" /></Field>
         <Field label="Consultation fee (KES)" htmlFor="dr-fee"><input id="dr-fee" type="number" min={0} step="50" value={fee} onChange={(e) => setFee(e.target.value)} className={inputCls} style={inputStyle} /></Field>
-        <Field label="Photo link (https)" htmlFor="dr-photo" hint="Optional. Initials are shown if blank."><input id="dr-photo" type="url" value={photo} maxLength={500} onChange={(e) => setPhoto(e.target.value)} className={inputCls} style={inputStyle} placeholder="https://…" /></Field>
+        <Field label="Photo" htmlFor="dr-photo" hint="Optional. Initials are shown if blank."><FileUpload id="dr-photo" purpose="doctor_photo" value={photo} onChange={setPhoto} onBusyChange={setUploading} /></Field>
       </div>
       <Field label="Bio" htmlFor="dr-bio"><textarea id="dr-bio" rows={4} value={bio} maxLength={5000} onChange={(e) => setBio(e.target.value)} className={`${inputCls} resize-none`} style={inputStyle} /></Field>
       {doctor && (
@@ -157,18 +158,18 @@ function DoctorCard({ user, doctor, depts, refresh }: { user: any; doctor: any; 
           <input type="checkbox" checked={available} onChange={(e) => setAvailable(e.target.checked)} /> Accepting appointments (uncheck to hide from the website and booking)
         </label>
       )}
-      <button disabled={busy} onClick={save} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>
-        {busy ? "Saving..." : doctor ? "Save doctor profile" : "Create doctor profile"}
+      <button disabled={busy || uploading} onClick={save} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>
+        {busy ? "Saving..." : uploading ? "Uploading photo..." : doctor ? "Save doctor profile" : "Create doctor profile"}
       </button>
     </Card>
   );
 }
 
-type Slot = { dayOfWeek: number; startTime: string; endTime: string; maxSlots: number };
+type Slot = { dayOfWeek: number; startTime: string; endTime: string; maxSlots: number; slotMinutes: number };
 
 function AvailabilityCard({ doctor, initial, refresh }: { doctor: any; initial: any[]; refresh: (msg?: string) => void }) {
   const { busy, error, run } = useAction(refresh);
-  const [slots, setSlots] = useState<Slot[]>(initial.map((s) => ({ dayOfWeek: s.dayOfWeek, startTime: hhmm(s.startTime), endTime: hhmm(s.endTime), maxSlots: s.maxSlots })));
+  const [slots, setSlots] = useState<Slot[]>(initial.map((s) => ({ dayOfWeek: s.dayOfWeek, startTime: hhmm(s.startTime), endTime: hhmm(s.endTime), maxSlots: s.maxSlots ?? 20, slotMinutes: s.slotMinutes ?? 20 })));
   const [localError, setLocalError] = useState("");
 
   const update = (i: number, patch: Partial<Slot>) => setSlots(slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -181,6 +182,7 @@ function AvailabilityCard({ doctor, initial, refresh }: { doctor: any; initial: 
   return (
     <Card className="space-y-4">
       <h2 className="text-sm font-semibold" style={{ color: "var(--navy)" }}>Weekly schedule</h2>
+      <p className="text-xs" style={{ color: "var(--grey-500)" }}>Each block is split into bookable times of the length you choose. Use Booking → Time off for leave.</p>
       {(localError || error) && <ErrorBox>{localError || error}</ErrorBox>}
       {slots.length === 0 && <p className="text-sm" style={{ color: "var(--grey-500)" }}>No clinic hours yet.</p>}
       <div className="space-y-3">
@@ -192,12 +194,15 @@ function AvailabilityCard({ doctor, initial, refresh }: { doctor: any; initial: 
             <input aria-label="Start time" type="time" value={s.startTime} onChange={(e) => update(i, { startTime: e.target.value })} className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }} />
             <span style={{ color: "var(--grey-400)" }}>to</span>
             <input aria-label="End time" type="time" value={s.endTime} onChange={(e) => update(i, { endTime: e.target.value })} className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }} />
+            <select aria-label="Appointment length" value={s.slotMinutes} onChange={(e) => update(i, { slotMinutes: Number(e.target.value) })} className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }}>
+              {[10, 15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} min each</option>)}
+            </select>
             <button type="button" onClick={() => setSlots(slots.filter((_, idx) => idx !== i))} className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--danger)" }}>Remove</button>
           </div>
         ))}
       </div>
       <div className="flex gap-3 flex-wrap">
-        <button type="button" onClick={() => setSlots([...slots, { dayOfWeek: 1, startTime: "08:00", endTime: "17:00", maxSlots: 20 }])} className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>+ Add hours</button>
+        <button type="button" onClick={() => setSlots([...slots, { dayOfWeek: 1, startTime: "08:00", endTime: "17:00", maxSlots: 20, slotMinutes: 20 }])} className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>+ Add hours</button>
         <button disabled={busy} onClick={save} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>{busy ? "Saving..." : "Save schedule"}</button>
       </div>
     </Card>

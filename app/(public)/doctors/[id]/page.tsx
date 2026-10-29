@@ -8,6 +8,7 @@ import { DAYS, fmtMoney, hhmm } from "@/lib/format";
 import { Back } from "@/components/Icon";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd, graph, pageMeta, physicianJsonLd } from "@/lib/seo";
+import { fit } from "@/lib/images";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ id: string }> };
@@ -49,7 +50,7 @@ export default async function DoctorPage({ params }: Props) {
         <div className="flex items-center gap-5 mb-8">
           {d.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={d.photoUrl} alt={`Dr. ${d.firstName} ${d.lastName}`} className="w-24 h-24 rounded-full object-cover" />
+            <img src={fit(d.photoUrl, 240)} alt={`Dr. ${d.firstName} ${d.lastName}`} className="w-24 h-24 rounded-full object-cover" />
           ) : (
             <div className="w-24 h-24 rounded-full flex items-center justify-center text-2xl font-bold" style={{ background: "var(--teal-light)", color: "var(--teal-dark)" }} aria-hidden>{initials}</div>
           )}

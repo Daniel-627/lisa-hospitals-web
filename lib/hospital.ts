@@ -13,4 +13,4 @@ export const HOSPITAL = {
   mapQuery: "Lisa Hospitals, Nairobi Highway, Kisumu, Kenya",
 };
 
-export const BOOK_URL = "/patient/appointments/book";
+export const BOOK_URL = "/book";

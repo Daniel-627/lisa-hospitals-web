@@ -7,6 +7,7 @@ import { fmtDate } from "@/lib/format";
 import { Back } from "@/components/Icon";
 import JsonLd from "@/components/JsonLd";
 import { articleJsonLd, breadcrumbJsonLd, graph, pageMeta, summarize } from "@/lib/seo";
+import { fit } from "@/lib/images";
 
 export const revalidate = 60;
 type Props = { params: Promise<{ slug: string }> };
@@ -46,7 +47,7 @@ export default async function ArticlePage({ params }: Props) {
       <Section narrow>
         {data.coverImage && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={data.coverImage} alt="" className="w-full max-h-96 object-cover rounded-xl mb-8" />
+          <img src={fit(data.coverImage, 1200)} alt="" className="w-full max-h-96 object-cover rounded-xl mb-8" />
         )}
         <div className="space-y-5">
           {paragraphs.map((p, i) => <p key={i} className="text-base leading-relaxed whitespace-pre-line" style={{ color: "var(--navy)" }}>{p}</p>)}

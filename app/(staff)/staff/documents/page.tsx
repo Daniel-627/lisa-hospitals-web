@@ -7,6 +7,7 @@ import PortalShell from "@/components/PortalShell";
 import { Card, ErrorBox, Field, Spinner, SuccessBox, inputCls, inputStyle } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { DOC_TYPES, errMsg } from "@/lib/format";
+import FileUpload from "@/components/FileUpload";
 
 type Picked = { id: string; name: string; number: string };
 
@@ -19,6 +20,7 @@ function UploadForm() {
   const [documentType, setDocumentType] = useState("lab_result");
   const [title, setTitle] = useState("");
   const [fileUrl, setFileUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [done, setDone] = useState<Picked | null>(null);
@@ -48,7 +50,7 @@ function UploadForm() {
     setDone(null);
     if (!patient) return setError("Choose a patient first.");
     if (!title.trim()) return setError("Enter a title for the document.");
-    if (!/^https:\/\/.+/i.test(fileUrl.trim())) return setError("The file link must start with https://");
+    if (!fileUrl.trim()) return setError("Choose the file to upload.");
 
     setSaving(true);
     try {
@@ -110,11 +112,9 @@ function UploadForm() {
             <input id="title" value={title} maxLength={200} onChange={(e) => setTitle(e.target.value)} placeholder="e.g. Full blood count — 5 Oct 2026" className={inputCls} style={inputStyle} />
           </Field>
 
-          <Field label="File link (https)" htmlFor="url" hint="Paste a link to the file. Direct file uploads will be added with storage setup.">
-            <input id="url" type="url" value={fileUrl} maxLength={500} onChange={(e) => setFileUrl(e.target.value)} placeholder="https://…" className={inputCls} style={inputStyle} />
-          </Field>
+          <Field label="File" htmlFor="file" hint="PDF or image, up to 10 MB. Stored privately: it opens only for the patient and the staff treating them."><FileUpload id="file" purpose="patient_document" value={fileUrl} onChange={setFileUrl} onBusyChange={setUploading} /></Field>
 
-          <button type="submit" disabled={saving} className="w-full py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-70" style={{ background: saving ? "var(--teal-dark)" : "var(--teal)" }}>
+          <button type="submit" disabled={saving || uploading} className="w-full py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-70" style={{ background: saving ? "var(--teal-dark)" : "var(--teal)" }}>
             {saving ? "Saving..." : "Save document"}
           </button>
         </Card>

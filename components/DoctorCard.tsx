@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { fit } from "@/lib/images";
 
 export type DoctorLite = {
   id: string; firstName: string; lastName: string; speciality: string;
@@ -12,7 +13,7 @@ export default function DoctorCard({ d }: { d: DoctorLite }) {
       <div className="flex items-center gap-4">
         {d.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={d.photoUrl} alt={`Dr. ${d.firstName} ${d.lastName}`} loading="lazy" className="w-16 h-16 rounded-full object-cover shrink-0" />
+          <img src={fit(d.photoUrl, 160)} alt={`Dr. ${d.firstName} ${d.lastName}`} loading="lazy" className="w-16 h-16 rounded-full object-cover shrink-0" />
         ) : (
           <div className="w-16 h-16 rounded-full flex items-center justify-center text-lg font-bold shrink-0" style={{ background: "var(--teal-light)", color: "var(--teal-dark)" }} aria-hidden>
             {initials}

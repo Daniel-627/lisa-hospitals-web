@@ -42,7 +42,7 @@ export default function PublicFooter() {
         <div>
           <div className={col} style={{ color: "rgba(255,255,255,0.35)" }}>Patients</div>
           <ul className="space-y-2">
-            {[["/patient/appointments/book", "Book appointment"], ["/auth/callback", "Patient portal"], ["/contact", "Get in touch"]].map(([href, label]) => (
+            {[["/book", "Book appointment"], ["/booking/manage", "Change or cancel a booking"], ["/contact", "Get in touch"]].map(([href, label]) => (
               <li key={href}><Link href={href} className={link} style={{ color: "rgba(255,255,255,0.5)" }}>{label}</Link></li>
             ))}
             <li><a href={`tel:${HOSPITAL.phoneTel}`} className={link} style={{ color: "rgba(255,255,255,0.5)" }}>Call {HOSPITAL.phoneDisplay}</a></li>

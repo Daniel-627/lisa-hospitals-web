@@ -6,6 +6,7 @@ import { Card, ErrorBox, Field, Pill, Spinner, inputCls, inputStyle } from "@/co
 import { staffApi } from "@/lib/api";
 import { errMsg, fmtDateTime } from "@/lib/format";
 import { useWorklist } from "@/lib/useWorklist";
+import FileUpload from "@/components/FileUpload";
 
 const ageOf = (dob?: string) => (dob ? `${new Date().getFullYear() - Number(dob.slice(0, 4))}y` : "");
 
@@ -14,6 +15,7 @@ function ReportForm({ order, onDone }: { order: any; onDone: () => void }) {
   const [impression, setImpression] = useState("");
   const [imageUrl, setImageUrl] = useState("");
   const [reportUrl, setReportUrl] = useState("");
+  const [uploading, setUploading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,7 +23,6 @@ function ReportForm({ order, onDone }: { order: any; onDone: () => void }) {
     e.preventDefault();
     setError("");
     if (!findings.trim() && !impression.trim()) return setError("Enter the findings or the impression.");
-    if ((imageUrl.trim() && !imageUrl.trim().startsWith("https://")) || (reportUrl.trim() && !reportUrl.trim().startsWith("https://"))) return setError("Links must start with https://");
     setBusy(true);
     try {
       await staffApi.radiologyResult(order.id, { findings: findings.trim() || undefined, impression: impression.trim() || undefined, imageUrl: imageUrl.trim() || undefined, reportUrl: reportUrl.trim() || undefined });
@@ -38,10 +39,10 @@ function ReportForm({ order, onDone }: { order: any; onDone: () => void }) {
       <Field label="Findings" htmlFor={`f-${order.id}`}><textarea id={`f-${order.id}`} rows={4} value={findings} maxLength={10000} onChange={(e) => setFindings(e.target.value)} className={inputCls} style={inputStyle} /></Field>
       <Field label="Impression" htmlFor={`i-${order.id}`}><textarea id={`i-${order.id}`} rows={2} value={impression} maxLength={5000} onChange={(e) => setImpression(e.target.value)} className={`${inputCls} resize-none`} style={inputStyle} /></Field>
       <div className="grid sm:grid-cols-2 gap-3">
-        <Field label="Image link (https, optional)" htmlFor={`u-${order.id}`}><input id={`u-${order.id}`} type="url" value={imageUrl} maxLength={500} onChange={(e) => setImageUrl(e.target.value)} className={inputCls} style={inputStyle} /></Field>
-        <Field label="Report link (https, optional)" htmlFor={`r-${order.id}`}><input id={`r-${order.id}`} type="url" value={reportUrl} maxLength={500} onChange={(e) => setReportUrl(e.target.value)} className={inputCls} style={inputStyle} /></Field>
+        <Field label="Image (optional)" htmlFor={`u-${order.id}`} hint="JPG, PNG or WebP, up to 10 MB. Stored privately."><FileUpload id={`u-${order.id}`} purpose="radiology_image" value={imageUrl} onChange={setImageUrl} onBusyChange={setUploading} /></Field>
+        <Field label="Report file (optional)" htmlFor={`r-${order.id}`} hint="PDF or image, up to 10 MB. Stored privately."><FileUpload id={`r-${order.id}`} purpose="radiology_report" value={reportUrl} onChange={setReportUrl} onBusyChange={setUploading} /></Field>
       </div>
-      <button type="submit" disabled={busy} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>{busy ? "Saving..." : "Save report and send to the doctor"}</button>
+      <button type="submit" disabled={busy || uploading} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>{busy ? "Saving..." : uploading ? "Uploading..." : "Save report and send to the doctor"}</button>
     </form>
   );
 }

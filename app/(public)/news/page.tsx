@@ -6,6 +6,7 @@ import { fmtDate } from "@/lib/format";
 import { Icon, Back, Next } from "@/components/Icon";
 import JsonLd from "@/components/JsonLd";
 import { breadcrumbJsonLd, graph, pageMeta } from "@/lib/seo";
+import { fit } from "@/lib/images";
 
 export async function generateMetadata({ searchParams }: { searchParams: Promise<{ page?: string }> }): Promise<Metadata> {
   const n = Math.max(1, parseInt((await searchParams).page ?? "1", 10) || 1);
@@ -37,7 +38,7 @@ export default async function NewsPage({ searchParams }: Props) {
               <Link key={p.id} href={`/news/${p.slug}`} className="block rounded-xl border overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
                 {p.coverImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
-                  <img src={p.coverImage} alt="" loading="lazy" className="w-full h-44 object-cover" />
+                  <img src={fit(p.coverImage, 600)} alt="" loading="lazy" className="w-full h-44 object-cover" />
                 ) : (
                   <div className="w-full h-44 flex items-center justify-center text-4xl" style={{ background: "var(--teal-light)", color: "var(--teal)" }} aria-hidden><Icon name="news" /></div>
                 )}

@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useClerk, UserButton } from "@clerk/nextjs";
 import { authApi } from "@/lib/api";
 import { LogoMark, Spinner } from "@/components/ui";
+import { CLINICAL } from "@/lib/features";
 
 export type Me = { id: string; email: string; phone: string; firstName: string; lastName: string; role: string };
 
@@ -18,6 +19,7 @@ export const useMe = () => {
 
 const NAV = {
   staff: [
+    { href: "/staff/bookings", label: "Bookings", roles: ["admin", "receptionist", "doctor"] },
     { href: "/staff/dashboard", label: "Dashboard" },
     { href: "/staff/queue", label: "Queue", roles: ["receptionist", "nurse", "doctor", "admin"] },
     { href: "/staff/checkin", label: "Check-in", roles: ["receptionist", "nurse", "doctor", "admin"] },
@@ -35,6 +37,8 @@ const NAV = {
   admin: [
     { href: "/admin/dashboard", label: "Dashboard" },
     { href: "/admin/users", label: "Users" },
+    { href: "/staff/bookings", label: "Bookings" },
+    { href: "/admin/booking", label: "Booking settings" },
     { href: "/admin/news", label: "News" },
     { href: "/admin/enquiries", label: "Messages" },
     { href: "/admin/audit", label: "Audit log" },
@@ -123,7 +127,10 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     : audience === "patient" && me.role !== "patient" ? [...base, { href: "/staff/dashboard", label: "Staff portal" }]
     : base;
   // Some tabs only make sense for certain roles (the server enforces this too).
-  const visible = links.filter((l) => !(l as NavItem).roles || (l as NavItem).roles!.includes(me.role));
+  // Booking-only mode: just the booking desk, plus admin tools that aren't clinical.
+  const BOOKING_ONLY = new Set(["/staff/bookings", "/admin/dashboard", "/admin/users", "/admin/booking", "/admin/news", "/admin/enquiries", "/admin/audit"]);
+  const scoped = CLINICAL ? links : links.filter((l) => BOOKING_ONLY.has(l.href));
+  const visible = scoped.filter((l) => !(l as NavItem).roles || (l as NavItem).roles!.includes(me.role));
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);
   return (
     <MeContext.Provider value={me}>

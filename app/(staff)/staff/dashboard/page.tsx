@@ -7,6 +7,8 @@ import { Card, ErrorBox, Spinner } from "@/components/ui";
 import { staffApi } from "@/lib/api";
 import { errMsg } from "@/lib/format";
 import { Icon } from "@/components/Icon";
+import { CLINICAL } from "@/lib/features";
+import { useRouter } from "next/navigation";
 
 const actions: { label: string; icon: string; href: string | null; roles?: string[] }[] = [
   { label: "Check-in",        icon: "checkin", href: "/staff/checkin" },
@@ -73,6 +75,9 @@ function Content() {
 }
 
 export default function StaffDashboard() {
+  const router = useRouter();
+  useEffect(() => { if (!CLINICAL) router.replace("/staff/bookings"); }, [router]);
+  if (!CLINICAL) return <Spinner label="Opening bookings..." />;
   return (
     <PortalShell
       audience="staff"

@@ -8,7 +8,7 @@ import { authApi } from "@/lib/api";
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const LANDING: Record<string, string> = {
-  patient: "/patient/dashboard", admin: "/admin/dashboard",
+  patient: process.env.NEXT_PUBLIC_CLINICAL_ENABLED === "true" ? "/patient/dashboard" : "/book", admin: "/admin/dashboard",
   lab_technician: "/staff/lab", radiographer: "/staff/radiology", pharmacist: "/staff/pharmacy",
 };
 
