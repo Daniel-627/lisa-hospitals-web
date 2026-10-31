@@ -31,3 +31,27 @@ body {
   main { max-width: none !important; padding: 0 !important; }
   .print-sheet { border: none !important; box-shadow: none !important; }
 }
+
+/* ── Staff, admin and patient portals: a clean, TailAdmin-style dashboard look ──────────────────────────────
+   Tokens are redefined only inside .portal, so the public website keeps its own look. */
+.portal {
+  --page:       #f9fafb;
+  --navy:       #101828;
+  --grey-100:   #f2f4f7;
+  --grey-200:   #e4e7ec;
+  --grey-400:   #98a2b3;
+  --grey-500:   #667085;
+  --grey-600:   #475467;
+  --teal-light: #e6f6f6;
+  --font-display: var(--font-outfit), system-ui, sans-serif;
+  font-family: var(--font-outfit), var(--font-body), system-ui, sans-serif;
+  color: var(--navy);
+  -webkit-font-smoothing: antialiased;
+}
+.portal main .rounded-xl { border-radius: 1rem; }
+.portal main .border.rounded-xl, .portal main div.p-5.rounded-xl { box-shadow: 0px 1px 2px 0px rgba(16, 24, 40, 0.05); }
+.portal input:not([type="checkbox"]):not([type="radio"]), .portal select, .portal textarea { border-color: var(--grey-200); transition: box-shadow .15s, border-color .15s; }
+.portal input:focus-visible, .portal select:focus-visible, .portal textarea:focus-visible,
+.portal button:focus-visible, .portal a:focus-visible { outline: none; border-color: var(--teal); box-shadow: 0 0 0 4px rgba(0, 150, 154, 0.14); }
+.portal table { font-size: 0.875rem; }
+.portal table th { font-weight: 500; }

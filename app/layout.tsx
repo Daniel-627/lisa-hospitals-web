@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { DM_Serif_Display, Inter } from "next/font/google";
+import { DM_Serif_Display, Inter, Outfit } from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import TokenProvider from "@/components/TokenProvider";
 import SiteChrome from "@/components/SiteChrome";
@@ -13,6 +13,11 @@ const dmSerif = DM_Serif_Display({
   weight: ["400"],
   subsets: ["latin"],
   variable: "--font-display",
+});
+
+const outfit = Outfit({
+  subsets: ["latin"],
+  variable: "--font-outfit",
 });
 
 const inter = Inter({
@@ -56,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <ClerkProvider>
       <html lang="en-KE">
-        <body className={`${dmSerif.variable} ${inter.variable} antialiased`}>
+        <body className={`${dmSerif.variable} ${inter.variable} ${outfit.variable} antialiased`}>
           <TokenProvider />
           <SiteChrome
             nav={<PublicNav />}

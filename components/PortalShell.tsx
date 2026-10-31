@@ -5,7 +5,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useClerk, UserButton } from "@clerk/nextjs";
 import { authApi } from "@/lib/api";
+import { roleLabel } from "@/lib/format";
 import { LogoMark, Spinner } from "@/components/ui";
+import {
+  BedDouble, CalendarCheck, CalendarDays, ClipboardCheck, CreditCard, FileText, FlaskConical, Globe, LayoutDashboard, ListOrdered, LogOut,
+  Menu, MessageSquare, Newspaper, Pill, ScrollText, Settings, Stethoscope, Users, UserRound, Receipt, type LucideIcon,
+} from "lucide-react";
 import { CLINICAL } from "@/lib/features";
 
 export type Me = { id: string; email: string; phone: string; firstName: string; lastName: string; role: string };
@@ -15,6 +20,16 @@ export const useMe = () => {
   const me = useContext(MeContext);
   if (!me) throw new Error("useMe must be used inside <PortalShell>");
   return me;
+};
+
+const NAV_ICONS: Record<string, LucideIcon> = {
+  "/staff/dashboard": LayoutDashboard, "/staff/bookings": CalendarCheck, "/staff/calendar": CalendarDays, "/staff/queue": ListOrdered,
+  "/staff/checkin": ClipboardCheck, "/staff/patients": Users, "/staff/admissions": BedDouble, "/staff/billing": CreditCard,
+  "/staff/appointments": CalendarDays, "/staff/results": FlaskConical, "/staff/lab": FlaskConical, "/staff/radiology": Stethoscope,
+  "/staff/pharmacy": Pill, "/staff/documents": FileText, "/patient/dashboard": UserRound, "/patient/appointments/book": CalendarCheck,
+  "/patient/documents": FileText, "/patient/invoices": Receipt, "/patient/admissions": BedDouble, "/patient/results": FlaskConical, "/patient/profile": UserRound,
+  "/admin/dashboard": LayoutDashboard, "/admin/users": Users, "/admin/news": Newspaper, "/admin/enquiries": MessageSquare,
+  "/admin/audit": ScrollText, "/admin/booking": Settings, "/admin/services": Stethoscope,
 };
 
 const NAV = {
@@ -72,6 +87,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
   const [me, setMe] = useState<Me | null>(null);
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -134,50 +150,98 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
   const scoped = CLINICAL ? links : links.filter((l) => BOOKING_ONLY.has(l.href));
   const visible = scoped.filter((l) => !(l as NavItem).roles || (l as NavItem).roles!.includes(me.role));
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);
+  const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
+  const GROUPS: [string, string[]][] = [
+    ["Appointments", ["/staff/bookings", "/staff/calendar", "/admin/booking", "/admin/services"]],
+    ["Manage", ["/admin/dashboard", "/admin/users", "/admin/news", "/admin/enquiries", "/admin/audit"]],
+  ];
+  const grouped = CLINICAL
+    ? [["Menu", visible] as [string, readonly NavItem[]]]
+    : [...GROUPS.map(([g, hrefs]) => [g, visible.filter((l) => hrefs.includes(l.href))] as [string, readonly NavItem[]]),
+       ["More", visible.filter((l) => !GROUPS.some(([, h]) => h.includes(l.href)))] as [string, readonly NavItem[]]].filter(([, items]) => items.length > 0);
+  const initials = `${me.firstName?.[0] ?? ""}${me.lastName?.[0] ?? ""}`.toUpperCase();
+  const areaLabel = audience === "admin" ? "Admin" : audience === "staff" ? "Staff portal" : "My health";
+
   return (
     <MeContext.Provider value={me}>
-      <div className="min-h-screen" style={{ background: audience === "patient" ? "var(--white)" : "var(--grey-100)" }}>
-        <header className="sticky top-0 z-50 no-print" style={{ background: "var(--navy)" }}>
-          <div className="flex items-center justify-between px-6 h-16">
-            <Link href={links[0].href} className="flex items-center gap-3">
-              <LogoMark />
-              <span className="text-white font-bold text-sm">Lisa Hospitals</span>
-              {audience !== "patient" && (
-                <span className="text-xs px-2 py-0.5 rounded hidden sm:inline" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.6)" }}>{audience === "admin" ? "Admin" : "Staff Portal"}</span>
-              )}
-            </Link>
-            <div className="flex items-center gap-4">
-              <span className="text-sm hidden md:inline" style={{ color: "rgba(255,255,255,0.6)" }}>{me.firstName} {me.lastName}</span>
-              {audience === "patient" ? (
-                <UserButton />
-              ) : (
-                <button onClick={() => signOut({ redirectUrl: "/login" })} className="text-xs px-3 py-1.5 rounded-lg" style={{ background: "rgba(255,255,255,0.1)", color: "rgba(255,255,255,0.7)" }}>
-                  Sign out
-                </button>
-              )}
+      <div className="portal min-h-screen flex" style={{ background: "var(--page)" }}>
+        {/* Mobile: dark overlay behind the open menu */}
+        {menuOpen && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden no-print" onClick={() => setMenuOpen(false)} aria-hidden />}
+
+        <aside
+          className={`no-print fixed inset-y-0 left-0 z-50 w-[280px] flex flex-col border-r transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
+          style={{ background: "white", borderColor: "var(--grey-200)" }} aria-label="Portal menu"
+        >
+          <div className="h-[72px] px-5 flex items-center gap-3 border-b shrink-0" style={{ borderColor: "var(--grey-200)" }}>
+            <LogoMark />
+            <div className="leading-tight">
+              <div className="font-semibold text-[15px]" style={{ color: "var(--navy)" }}>Lisa Hospitals</div>
+              <div className="text-xs" style={{ color: "var(--grey-500)" }}>{areaLabel}</div>
             </div>
           </div>
-          <nav className="flex gap-1 px-4 overflow-x-auto" aria-label="Portal">
-            {visible.map((l) => {
-              const active = pathname === l.href || (l.href !== links[0].href && pathname.startsWith(l.href));
-              return (
-                <Link key={l.href} href={l.href} aria-current={active ? "page" : undefined}
-                  className="px-3 py-2.5 text-sm font-medium whitespace-nowrap border-b-2"
-                  style={{ color: active ? "white" : "rgba(255,255,255,0.55)", borderColor: active ? "var(--teal)" : "transparent" }}>
-                  {l.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </header>
 
-        <main className="max-w-6xl mx-auto px-6 py-10">
-          <div className="mb-8">
-            <h1 className="text-3xl font-normal mb-1" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>{resolve(title)}</h1>
-            {subtitle && <p className="text-sm" style={{ color: "var(--grey-500)" }}>{resolve(subtitle)}</p>}
+          <nav className="flex-1 overflow-y-auto px-4 py-5" aria-label="Portal">
+            {grouped.map(([group, items]) => (
+              <div key={group} className="mb-6">
+                <h2 className="px-3 mb-2 text-[11px] font-medium uppercase tracking-wider" style={{ color: "var(--grey-400)" }}>{group}</h2>
+                <ul className="space-y-1">
+                  {items.map((l) => {
+                    const active = isActive(l.href);
+                    const Ic = NAV_ICONS[l.href] ?? LayoutDashboard;
+                    return (
+                      <li key={l.href}>
+                        <Link href={l.href} onClick={() => setMenuOpen(false)} aria-current={active ? "page" : undefined}
+                          className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-[var(--grey-100)]"
+                          style={{ background: active ? "var(--teal-light)" : undefined, color: active ? "var(--teal-dark)" : "var(--grey-600)" }}>
+                          <Ic className="size-5 shrink-0" aria-hidden />
+                          {l.label}
+                        </Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
+
+          <div className="p-4 border-t shrink-0" style={{ borderColor: "var(--grey-200)" }}>
+            <div className="flex items-center gap-3 mb-3 min-w-0">
+              {audience === "patient" ? <UserButton /> : (
+                <div className="size-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0" style={{ background: "var(--teal-light)", color: "var(--teal-dark)" }} aria-hidden>{initials}</div>
+              )}
+              <div className="min-w-0">
+                <div className="text-sm font-medium truncate" style={{ color: "var(--navy)" }}>{me.firstName} {me.lastName}</div>
+                <div className="text-xs truncate" style={{ color: "var(--grey-500)" }}>{roleLabel(me.role)}</div>
+              </div>
+            </div>
+            <button onClick={() => signOut({ redirectUrl: "/login" })} className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border hover:bg-[var(--grey-100)]" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
+              <LogOut className="size-4" aria-hidden /> Sign out
+            </button>
           </div>
-          {children}
-        </main>
+        </aside>
+
+        <div className="flex-1 min-w-0 flex flex-col">
+          <header className="no-print sticky top-0 z-30 h-[72px] flex items-center gap-3 px-4 sm:px-6 border-b" style={{ background: "white", borderColor: "var(--grey-200)" }}>
+            <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="lg:hidden size-10 rounded-lg border flex items-center justify-center" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
+              <Menu className="size-5" aria-hidden />
+            </button>
+            <div className="min-w-0 flex-1">
+              <div className="text-[11px] uppercase tracking-wider truncate" style={{ color: "var(--grey-400)" }}>{areaLabel}</div>
+              <div className="text-sm font-medium truncate" style={{ color: "var(--navy)" }}>{new Date().toLocaleDateString("en-KE", { weekday: "long", day: "numeric", month: "long" })}</div>
+            </div>
+            <Link href="/" className="text-sm font-medium px-3 py-2 rounded-lg border hidden sm:inline-flex items-center gap-2 hover:bg-[var(--grey-100)]" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
+              <Globe className="size-4" aria-hidden /> Public site
+            </Link>
+          </header>
+
+          <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">
+            <div className="mb-6">
+              <h1 className="text-2xl sm:text-[28px] font-semibold leading-tight mb-1" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>{resolve(title)}</h1>
+              {subtitle && <p className="text-sm" style={{ color: "var(--grey-500)" }}>{resolve(subtitle)}</p>}
+            </div>
+            {children}
+          </main>
+        </div>
       </div>
     </MeContext.Provider>
   );
