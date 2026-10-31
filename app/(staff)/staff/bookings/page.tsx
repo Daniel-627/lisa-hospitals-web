@@ -4,18 +4,92 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import PortalShell, { useMe } from "@/components/PortalShell";
 import SlotPicker from "@/components/SlotPicker";
 import { Card, ErrorBox, Field, Pill, Spinner, StatusBadge, SuccessBox, inputCls, inputStyle } from "@/components/ui";
+import { CallHistory, CancelSheet, FLAG_LABEL, PhoneLink, RequestSheet, Sheet, WaitlistPanel, clock, isPast, nice, shift, type Booking } from "@/components/BookingDeskParts";
+import Link from "next/link";
 import { bookingApi } from "@/lib/api";
-import { errMsg, hhmm, todayLocal } from "@/lib/format";
+import { errMsg, todayLocal } from "@/lib/format";
 
-type Booking = {
-  id: string; reference: string; status: string; slotDate: string; slotTime: string; guestName: string; guestPhone?: string; reason?: string;
-  doctorId: string; doctorName: string; department: string; departmentId: string; source: string; phoneVerified: boolean;
-};
 type Doc = { id: string; departmentId: string; department: string; firstName: string; lastName: string; speciality: string };
 
-const shift = (d: string, n: number) => new Date(Date.parse(`${d}T00:00:00Z`) + n * 86400000).toISOString().slice(0, 10);
-const nice = (d: string) => new Date(`${d}T00:00:00Z`).toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", timeZone: "UTC" });
-const clock = (t: string) => { const [h, m] = hhmm(t).split(":").map(Number); return `${((h + 11) % 12) + 1}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`; };
+type Work = { needsCall: Booking[]; confirmTomorrow: Booking[]; confirmToday: Booking[]; awaitingOutcome: Booking[] };
+const btn = "px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50";
+
+/** One booking someone has to phone about. */
+function CallItem({ b, mode, busy, onCall, onMove, onCancel, onCheckIn, onNoShow }: {
+  b: Booking; mode: "flag" | "confirm" | "outcome"; busy: boolean;
+  onCall: (o: "coming" | "no_answer" | "resolved") => void; onMove: () => void; onCancel: () => void; onCheckIn: () => void; onNoShow: () => void;
+}) {
+  const [history, setHistory] = useState(false);
+  const isToday = b.slotDate === todayLocal();
+  return (
+    <div className="p-3 rounded-lg border" style={{ borderColor: b.flag ? "#f2b8b8" : "var(--grey-200)", background: b.flag ? "#fff7f7" : "white" }}>
+      <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
+        <div className="text-sm font-bold w-28 shrink-0" style={{ color: "var(--navy)" }}>{nice(b.slotDate)}<br />{clock(b.slotTime)}</div>
+        <div className="flex-1 min-w-[14rem]">
+          <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{b.guestName}</div>
+          <div className="text-xs" style={{ color: "var(--grey-500)" }}><PhoneLink phone={b.guestPhone} /> · {b.doctorName} · {b.department}</div>
+          {b.flag && (
+            <div className="text-xs mt-1 font-semibold" style={{ color: "var(--danger)" }}>
+              {FLAG_LABEL[b.flag] ?? b.flag}{b.flagReason ? `: ${b.flagReason}` : ""}{b.flagSuggestion ? ` (suggested: ${b.flagSuggestion})` : ""}
+            </div>
+          )}
+          {!!b.callAttempts && <div className="text-xs mt-1" style={{ color: "var(--gold-dark)" }}>Called {b.callAttempts}× with no answer{b.lastCallAt ? `, last at ${new Date(b.lastCallAt).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}` : ""}</div>}
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 mt-3">
+        {mode !== "outcome" && <button disabled={busy} onClick={() => onCall("coming")} className={btn} style={{ background: "var(--teal)", color: "white" }}>Spoke: coming</button>}
+        {mode !== "outcome" && <button disabled={busy} onClick={() => onCall("no_answer")} className={btn} style={{ background: "var(--gold-light)", color: "var(--gold-dark)" }}>No answer</button>}
+        {mode === "flag" && b.flag && (b.flag === "doctor_request" || b.flag === "time_off") && <button disabled={busy} onClick={() => onCall("resolved")} className={btn} style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Doctor can attend</button>}
+        {mode === "outcome" && isToday && <button disabled={busy} onClick={onCheckIn} className={btn} style={{ background: "var(--teal)", color: "white" }}>Check in</button>}
+        {mode === "outcome" && <button disabled={busy} onClick={onNoShow} className={btn} style={{ background: "var(--grey-100)", color: "var(--grey-500)" }}>No-show</button>}
+        <button disabled={busy} onClick={onMove} className={btn} style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Move</button>
+        <button disabled={busy} onClick={onCancel} className={btn} style={{ background: "#fde8e8", color: "var(--danger)" }}>Cancel</button>
+        <button onClick={() => setHistory(!history)} className={btn} style={{ color: "var(--grey-500)" }}>{history ? "Hide calls" : "Calls"}</button>
+      </div>
+      {history && <div className="mt-2"><CallHistory id={b.id} /></div>}
+    </div>
+  );
+}
+
+/** The red "to do" panel for reception: everything that needs a phone call or a decision. */
+function Attention({ work, act }: { work: Work; act: { call: (b: Booking, o: "coming" | "no_answer" | "resolved") => void; move: (b: Booking) => void; cancel: (b: Booking) => void; checkIn: (b: Booking) => void; noShow: (b: Booking) => void; busyId: string } }) {
+  const sections: { key: keyof Work; title: string; hint: string; mode: "flag" | "confirm" | "outcome"; tone: "danger" | "warn" | "muted" }[] = [
+    { key: "needsCall", title: "Call now", hint: "Doctor changes, leave, unverified phones and repeat no-shows", mode: "flag", tone: "danger" },
+    { key: "confirmToday", title: "Today: not yet confirmed", hint: "Try again this morning", mode: "confirm", tone: "danger" },
+    { key: "awaitingOutcome", title: "Awaiting outcome", hint: "Time has passed and they weren't checked in", mode: "outcome", tone: "warn" },
+    { key: "confirmTomorrow", title: "Tomorrow's confirmation calls", hint: "Ring each patient to check they're still coming", mode: "confirm", tone: "muted" },
+  ];
+  const total = sections.reduce((n, x) => n + work[x.key].length, 0);
+  const [open, setOpen] = useState<string | null>(null);
+  const firstFull = sections.find((x) => work[x.key].length)?.key ?? null;
+  const current = open ?? firstFull;
+  if (total === 0) return <Card><p className="text-sm" style={{ color: "var(--teal-dark)" }}>Nothing needs a call right now.</p></Card>;
+  return (
+    <Card>
+      <div className="flex flex-wrap gap-2 mb-4">
+        {sections.map((x) => (
+          <button key={x.key} onClick={() => setOpen(x.key)} aria-pressed={current === x.key} className="px-3 py-2 rounded-lg text-xs font-semibold border"
+            style={{ borderColor: current === x.key ? "var(--navy)" : "var(--grey-200)", background: work[x.key].length && x.tone === "danger" ? "#fde8e8" : "white", color: work[x.key].length && x.tone === "danger" ? "var(--danger)" : "var(--navy)" }}>
+            {x.title} · {work[x.key].length}
+          </button>
+        ))}
+      </div>
+      {sections.filter((x) => x.key === current).map((x) => (
+        <div key={x.key}>
+          <p className="text-xs mb-3" style={{ color: "var(--grey-500)" }}>{x.hint}</p>
+          {work[x.key].length === 0 ? <p className="text-sm" style={{ color: "var(--grey-500)" }}>Nothing here.</p> : (
+            <div className="space-y-2">
+              {work[x.key].map((b) => (
+                <CallItem key={b.id} b={b} mode={x.mode} busy={act.busyId === b.id}
+                  onCall={(o) => act.call(b, o)} onMove={() => act.move(b)} onCancel={() => act.cancel(b)} onCheckIn={() => act.checkIn(b)} onNoShow={() => act.noShow(b)} />
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </Card>
+  );
+}
 
 function Desk() {
   const me = useMe();
@@ -28,11 +102,14 @@ function Desk() {
   const [status, setStatus] = useState("");
   const [q, setQ] = useState("");
   const [rows, setRows] = useState<Booking[] | null>(null);
+  const [work, setWork] = useState<Work | null>(null);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [error, setError] = useState("");
   const [flash, setFlash] = useState("");
   const [busyId, setBusyId] = useState("");
   const [moving, setMoving] = useState<Booking | null>(null);
+  const [cancelling, setCancelling] = useState<Booking | null>(null);
+  const [requesting, setRequesting] = useState<{ b?: Booking; date?: string } | null>(null);
   const [creating, setCreating] = useState(false);
   const [tick, setTick] = useState(0);
   const reload = useCallback(() => setTick((n) => n + 1), []);
@@ -45,17 +122,27 @@ function Desk() {
       bookingApi.staffList({ from: date, to: span === "week" ? shift(date, 6) : date, doctorId: doctorId || undefined, status: status || undefined, q: q || undefined })
         .then(({ data }) => { if (!cancelled) { setRows(data.data); setError(""); } })
         .catch((e) => { if (!cancelled) { setRows([]); setError(e.response?.status === 403 ? "Your role doesn't have access to bookings." : errMsg(e, "Couldn't load bookings.")); } });
+      if (canAct) bookingApi.worklist().then(({ data }) => { if (!cancelled) setWork(data.data); }).catch(() => {});
     }, q ? 300 : 0);
     return () => { cancelled = true; clearTimeout(t); };
-  }, [date, span, doctorId, status, q, tick]);
+  }, [date, span, doctorId, status, q, tick, canAct]);
 
-  async function act(b: Booking, to: string, confirmMsg?: string) {
-    if (confirmMsg && !window.confirm(confirmMsg)) return;
+  // Keep the call list fresh while the desk stays open all day.
+  useEffect(() => { if (!canAct) return; const i = setInterval(reload, 120000); return () => clearInterval(i); }, [canAct, reload]);
+
+  async function run(b: Booking, fn: () => Promise<any>, ok: string) {
     setBusyId(b.id); setError(""); setFlash("");
-    try { await bookingApi.staffStatus(b.id, to); setFlash("Updated."); reload(); }
-    catch (e) { setError(errMsg(e, "Couldn't update the booking")); }
+    try { await fn(); setFlash(ok); reload(); }
+    catch (e) { setError(errMsg(e, "That didn't work. Please try again.")); }
     finally { setBusyId(""); }
   }
+  const setStatusTo = (b: Booking, to: string, confirmMsg?: string) => {
+    if (confirmMsg && !window.confirm(confirmMsg)) return;
+    void run(b, () => bookingApi.staffStatus(b.id, to), "Updated.");
+  };
+  const callAct = (b: Booking, o: "coming" | "no_answer" | "resolved") => void run(b, () => bookingApi.logCall(b.id, o), o === "no_answer" ? "No answer logged. It stays on the list." : "Logged.");
+  const checkIn = (b: Booking) => void run(b, () => bookingApi.checkIn(b.id), `${b.guestName} checked in.`);
+  const noShow = (b: Booking) => { if (window.confirm(`Mark ${b.guestName} as a no-show? They'll get a "we missed you" text.`)) void run(b, () => bookingApi.staffStatus(b.id, "no_show"), "Marked as no-show."); };
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -67,11 +154,20 @@ function Desk() {
     (rows ?? []).forEach((r) => m.set(r.slotDate, [...(m.get(r.slotDate) ?? []), r]));
     return [...m.entries()];
   }, [rows]);
-
-  const btn = "px-3 py-1.5 rounded-md text-xs font-semibold disabled:opacity-50";
+  const attention = work ? work.needsCall.length + work.confirmToday.length + work.awaitingOutcome.length : 0;
 
   return (
     <div className="space-y-5">
+      {canAct && work && (
+        <section aria-label="Needs attention">
+          <h2 className="text-sm font-semibold mb-2 flex items-center gap-2" style={{ color: "var(--navy)" }}>
+            To do {attention > 0 && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full text-white" style={{ background: "var(--danger)" }}>{attention} need action</span>}
+          </h2>
+          <Attention work={work} act={{ call: callAct, move: setMoving, cancel: setCancelling, checkIn, noShow, busyId }} />
+        </section>
+      )}
+      {canAct && <WaitlistPanel tick={tick} onChanged={(m) => { if (m) setFlash(m); reload(); }} />}
+
       <Card>
         <div className="flex flex-wrap items-end gap-3">
           <div className="flex items-center gap-1">
@@ -94,6 +190,8 @@ function Desk() {
             {["pending", "confirmed", "completed", "cancelled", "no_show"].map((s) => <option key={s} value={s}>{s.replace("_", " ")}</option>)}
           </select>
           {!isDoctor && <input aria-label="Search" placeholder="Search name, phone, reference" value={q} onChange={(e) => setQ(e.target.value)} className="px-3 py-2 rounded-lg border text-sm flex-1 min-w-[12rem]" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }} />}
+          <Link href={`/staff/bookings/print?date=${date}${doctorId ? `&doctorId=${doctorId}` : ""}`} target="_blank" className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Print day list</Link>
+          {isDoctor && <button onClick={() => setRequesting({ date })} className="px-4 py-2.5 rounded-lg text-sm font-semibold ml-auto" style={{ background: "#fde8e8", color: "var(--danger)" }}>I can&apos;t work this day</button>}
           {canAct && <button onClick={() => { setCreating(true); setFlash(""); }} className="px-4 py-2.5 rounded-lg text-sm font-semibold text-white ml-auto" style={{ background: "var(--teal)" }}>+ Book for a caller</button>}
         </div>
         {rows && rows.length > 0 && (
@@ -105,7 +203,7 @@ function Desk() {
 
       {flash && <SuccessBox>{flash}</SuccessBox>}
       {error && <ErrorBox>{error}</ErrorBox>}
-      {isDoctor && <p className="text-xs" style={{ color: "var(--grey-500)" }}>You see your own schedule: patient names and times only.</p>}
+      {isDoctor && <p className="text-xs" style={{ color: "var(--grey-500)" }}>You see your own schedule: patient names and times only. If you can&apos;t keep an appointment, ask reception to rearrange it.</p>}
 
       {!rows ? <Spinner label="Loading bookings..." /> : rows.length === 0 ? (
         <Card><p className="text-sm text-center py-6" style={{ color: "var(--grey-500)" }}>No bookings for this selection.</p></Card>
@@ -115,7 +213,8 @@ function Desk() {
           <div className="space-y-2">
             {list.map((b) => {
               const live = b.status === "pending" || b.status === "confirmed";
-              const past = `${b.slotDate} ${hhmm(b.slotTime)}` <= `${todayLocal()} ${new Date().toTimeString().slice(0, 5)}`;
+              const past = isPast(b);
+              const today = b.slotDate === todayLocal();
               return (
                 <Card key={b.id} className="!p-4">
                   <div className="flex flex-wrap items-start gap-x-6 gap-y-2">
@@ -123,23 +222,29 @@ function Desk() {
                     <div className="flex-1 min-w-[14rem]">
                       <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{b.guestName}</div>
                       <div className="text-xs" style={{ color: "var(--grey-500)" }}>
-                        {b.guestPhone && <a href={`tel:${b.guestPhone}`} className="underline">{b.guestPhone}</a>}{b.guestPhone && " · "}{b.doctorName} · {b.department}
+                        {b.guestPhone && <><PhoneLink phone={b.guestPhone} />{" · "}</>}{b.doctorName} · {b.department}
                       </div>
-                      {b.reason && <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>“{b.reason}”</div>}
-                      <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>{b.reference} · {b.source === "reception" ? "Booked by reception" : "Booked online"}{b.source === "online" && !b.phoneVerified ? " · phone not verified" : ""}</div>
+                      {b.flag && live && <div className="text-xs mt-1 font-semibold" style={{ color: "var(--danger)" }}>{FLAG_LABEL[b.flag] ?? b.flag}{b.flagReason ? `: ${b.flagReason}` : ""}{b.flagSuggestion ? ` (suggested: ${b.flagSuggestion})` : ""}</div>}
+                      {b.reason && !isDoctor && <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>“{b.reason}”</div>}
+                      <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>{b.reference} · {b.source === "reception" ? "Booked by reception" : "Booked online"}{b.reconfirmedAt && live && !b.checkedInAt ? " · confirmed by phone" : ""}</div>
                     </div>
-                    <StatusBadge status={b.status} />
+                    <div className="flex flex-col items-end gap-1">
+                      <StatusBadge status={b.status} />
+                      {b.checkedInAt && <Pill tone="ok">Checked in</Pill>}
+                    </div>
                   </div>
                   {canAct && live && (
                     <div className="flex flex-wrap gap-2 mt-3">
-                      {b.status === "pending" && <button disabled={busyId === b.id} onClick={() => act(b, "confirmed")} className={btn} style={{ background: "var(--teal)", color: "white" }}>Confirm</button>}
-                      <button disabled={busyId === b.id} onClick={() => setMoving(b)} className={btn} style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Move</button>
-                      {b.status === "confirmed" && past && <>
-                        <button disabled={busyId === b.id} onClick={() => act(b, "completed")} className={btn} style={{ background: "#e6f4ea", color: "#1e6b34" }}>Attended</button>
-                        <button disabled={busyId === b.id} onClick={() => act(b, "no_show", "Mark this patient as a no-show?")} className={btn} style={{ background: "var(--grey-100)", color: "var(--grey-500)" }}>No-show</button>
-                      </>}
-                      <button disabled={busyId === b.id} onClick={() => act(b, "cancelled", "Cancel this appointment? The patient will be texted.")} className={btn} style={{ background: "#fde8e8", color: "var(--danger)" }}>Cancel</button>
+                      {today && !b.checkedInAt && <button disabled={busyId === b.id} onClick={() => checkIn(b)} className={btn} style={{ background: "var(--teal)", color: "white" }}>Check in</button>}
+                      {b.status === "pending" && !b.checkedInAt && <button disabled={busyId === b.id} onClick={() => setStatusTo(b, "confirmed")} className={btn} style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Confirm</button>}
+                      {b.checkedInAt && <button disabled={busyId === b.id} onClick={() => setStatusTo(b, "completed")} className={btn} style={{ background: "#e6f4ea", color: "#1e6b34" }}>Done</button>}
+                      {!b.checkedInAt && <button disabled={busyId === b.id} onClick={() => setMoving(b)} className={btn} style={{ background: "var(--grey-100)", color: "var(--navy)" }}>Move</button>}
+                      {!b.checkedInAt && past && <button disabled={busyId === b.id} onClick={() => noShow(b)} className={btn} style={{ background: "var(--grey-100)", color: "var(--grey-500)" }}>No-show</button>}
+                      {!b.checkedInAt && <button disabled={busyId === b.id} onClick={() => setCancelling(b)} className={btn} style={{ background: "#fde8e8", color: "var(--danger)" }}>Cancel</button>}
                     </div>
+                  )}
+                  {isDoctor && live && !b.checkedInAt && !past && (
+                    <div className="mt-3"><button onClick={() => setRequesting({ b })} className={btn} style={{ background: "#fde8e8", color: "var(--danger)" }}>I can&apos;t keep this one</button></div>
                   )}
                 </Card>
               );
@@ -149,21 +254,9 @@ function Desk() {
       ))}
 
       {moving && <MoveSheet b={moving} onClose={() => setMoving(null)} onDone={() => { setMoving(null); setFlash("Appointment moved. The patient has been texted."); reload(); }} />}
+      {cancelling && <CancelSheet b={cancelling} onClose={() => setCancelling(null)} onDone={() => { setCancelling(null); setFlash("Appointment cancelled. The slot is free again."); reload(); }} />}
+      {requesting && <RequestSheet b={requesting.b} date={requesting.date} onClose={() => setRequesting(null)} onDone={(m) => { setRequesting(null); setFlash(m); reload(); }} />}
       {creating && <CreateSheet docs={docs} onClose={() => setCreating(false)} onDone={() => { setCreating(false); setFlash("Appointment booked."); reload(); }} />}
-    </div>
-  );
-}
-
-function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
-  return (
-    <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(10,25,47,0.5)" }} onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl p-6 bg-white" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>{title}</h2>
-          <button onClick={onClose} aria-label="Close" className="text-xl px-2" style={{ color: "var(--grey-500)" }}>×</button>
-        </div>
-        {children}
-      </div>
     </div>
   );
 }

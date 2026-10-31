@@ -165,11 +165,11 @@ function DoctorCard({ user, doctor, depts, refresh }: { user: any; doctor: any; 
   );
 }
 
-type Slot = { dayOfWeek: number; startTime: string; endTime: string; maxSlots: number; slotMinutes: number };
+type Slot = { dayOfWeek: number; startTime: string; endTime: string; maxSlots: number; slotMinutes: number; walkinSlots: number };
 
 function AvailabilityCard({ doctor, initial, refresh }: { doctor: any; initial: any[]; refresh: (msg?: string) => void }) {
   const { busy, error, run } = useAction(refresh);
-  const [slots, setSlots] = useState<Slot[]>(initial.map((s) => ({ dayOfWeek: s.dayOfWeek, startTime: hhmm(s.startTime), endTime: hhmm(s.endTime), maxSlots: s.maxSlots ?? 20, slotMinutes: s.slotMinutes ?? 20 })));
+  const [slots, setSlots] = useState<Slot[]>(initial.map((s) => ({ dayOfWeek: s.dayOfWeek, startTime: hhmm(s.startTime), endTime: hhmm(s.endTime), maxSlots: s.maxSlots ?? 20, slotMinutes: s.slotMinutes ?? 20, walkinSlots: s.walkinSlots ?? 0 })));
   const [localError, setLocalError] = useState("");
 
   const update = (i: number, patch: Partial<Slot>) => setSlots(slots.map((s, idx) => (idx === i ? { ...s, ...patch } : s)));
@@ -197,12 +197,15 @@ function AvailabilityCard({ doctor, initial, refresh }: { doctor: any; initial: 
             <select aria-label="Appointment length" value={s.slotMinutes} onChange={(e) => update(i, { slotMinutes: Number(e.target.value) })} className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }}>
               {[10, 15, 20, 30, 45, 60].map((m) => <option key={m} value={m}>{m} min each</option>)}
             </select>
+            <select aria-label="Walk-in hold" value={s.walkinSlots} onChange={(e) => update(i, { walkinSlots: Number(e.target.value) })} className="px-3 py-2 rounded-lg border text-sm" style={{ borderColor: "var(--grey-200)", color: "var(--navy)" }}>
+              <option value={0}>No walk-in hold</option>{[1, 2, 3, 4, 5, 6].map((n) => <option key={n} value={n}>Hold last {n} for walk-ins</option>)}
+            </select>
             <button type="button" onClick={() => setSlots(slots.filter((_, idx) => idx !== i))} className="px-3 py-2 text-xs font-semibold" style={{ color: "var(--danger)" }}>Remove</button>
           </div>
         ))}
       </div>
       <div className="flex gap-3 flex-wrap">
-        <button type="button" onClick={() => setSlots([...slots, { dayOfWeek: 1, startTime: "08:00", endTime: "17:00", maxSlots: 20, slotMinutes: 20 }])} className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>+ Add hours</button>
+        <button type="button" onClick={() => setSlots([...slots, { dayOfWeek: 1, startTime: "08:00", endTime: "17:00", maxSlots: 20, slotMinutes: 20, walkinSlots: 0 }])} className="px-4 py-2.5 rounded-lg text-sm font-semibold" style={{ background: "var(--grey-100)", color: "var(--navy)" }}>+ Add hours</button>
         <button disabled={busy} onClick={save} className="px-6 py-2.5 rounded-lg text-sm font-semibold text-white disabled:opacity-60" style={{ background: "var(--teal)" }}>{busy ? "Saving..." : "Save schedule"}</button>
       </div>
     </Card>

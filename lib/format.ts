@@ -44,7 +44,7 @@ export const fmtMoney = (v?: string | number | null) =>
   v == null || v === "" ? "" : `KES ${Number(v).toLocaleString("en-KE", { maximumFractionDigits: 0 })}`;
 
 export const ROLES: [string, string][] = [
-  ["patient", "Patient"], ["doctor", "Doctor"], ["nurse", "Nurse"], ["receptionist", "Receptionist"],
+  ["patient", "Patient"], ["doctor", "Doctor"], ["nurse", "Nurse"], ["receptionist", "Receptionist / Secretary"],
   ["lab_technician", "Lab technician"], ["radiographer", "Radiographer"], ["pharmacist", "Pharmacist"],
   ["billing_officer", "Billing officer"], ["admin", "Admin"],
 ];

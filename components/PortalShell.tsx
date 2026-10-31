@@ -20,6 +20,7 @@ export const useMe = () => {
 const NAV = {
   staff: [
     { href: "/staff/bookings", label: "Bookings", roles: ["admin", "receptionist", "doctor"] },
+    { href: "/staff/calendar", label: "My calendar", roles: ["doctor"] },
     { href: "/staff/dashboard", label: "Dashboard" },
     { href: "/staff/queue", label: "Queue", roles: ["receptionist", "nurse", "doctor", "admin"] },
     { href: "/staff/checkin", label: "Check-in", roles: ["receptionist", "nurse", "doctor", "admin"] },
@@ -39,6 +40,7 @@ const NAV = {
     { href: "/admin/users", label: "Users" },
     { href: "/staff/bookings", label: "Bookings" },
     { href: "/admin/booking", label: "Booking settings" },
+    { href: "/admin/services", label: "Services" },
     { href: "/admin/news", label: "News" },
     { href: "/admin/enquiries", label: "Messages" },
     { href: "/admin/audit", label: "Audit log" },
@@ -128,7 +130,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     : base;
   // Some tabs only make sense for certain roles (the server enforces this too).
   // Booking-only mode: just the booking desk, plus admin tools that aren't clinical.
-  const BOOKING_ONLY = new Set(["/staff/bookings", "/admin/dashboard", "/admin/users", "/admin/booking", "/admin/news", "/admin/enquiries", "/admin/audit"]);
+  const BOOKING_ONLY = new Set(["/staff/bookings", "/staff/calendar", "/admin/services", "/admin/dashboard", "/admin/users", "/admin/booking", "/admin/news", "/admin/enquiries", "/admin/audit"]);
   const scoped = CLINICAL ? links : links.filter((l) => BOOKING_ONLY.has(l.href));
   const visible = scoped.filter((l) => !(l as NavItem).roles || (l as NavItem).roles!.includes(me.role));
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);

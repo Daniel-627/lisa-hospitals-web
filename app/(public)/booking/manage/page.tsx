@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { PageHero, Section } from "@/components/public";
+import { Section } from "@/components/public";
+import { ManageHero } from "@/components/BookingHeros";
 import ManageBooking from "@/components/ManageBooking";
 import { Spinner } from "@/components/ui";
 import { PRIVATE_META } from "@/lib/seo";
@@ -11,7 +12,7 @@ export const metadata: Metadata = { title: "Manage your booking", ...PRIVATE_MET
 export default function ManagePage() {
   return (
     <>
-      <PageHero eyebrow="Appointments" title="Manage your" accent="booking" subtitle="Change the time or cancel your appointment." />
+      <ManageHero />
       <Section narrow><Suspense fallback={<Spinner />}><ManageBooking /></Suspense></Section>
     </>
   );

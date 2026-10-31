@@ -18,6 +18,13 @@ function Content() {
   const [form, setForm] = useState({ doctorId: "", startDate: todayLocal(), endDate: todayLocal(), reason: "" });
   const [busy, setBusy] = useState(false);
   const [tick, setTick] = useState(0);
+  const [report, setReport] = useState<any[] | null>(null);
+  const [closed, setClosed] = useState<{ id: string; date: string; name: string }[]>([]);
+  const [hol, setHol] = useState({ date: todayLocal(), name: "" });
+  const [exp, setExp] = useState({ from: todayLocal().slice(0, 8) + "01", to: todayLocal() });
+
+  useEffect(() => { bookingApi.closedDays().then(({ data }) => setClosed(data.data)).catch(() => {}); }, [tick]);
+  useEffect(() => { bookingApi.noShowReport(90).then(({ data }) => setReport(data.data.rows)).catch(() => setReport([])); }, []);
 
   useEffect(() => {
     Promise.all([bookingApi.doctors(), bookingApi.timeOff(), bookingApi.settings()])
@@ -39,6 +46,28 @@ function Content() {
   async function removeLeave(id: string) {
     if (!window.confirm("Remove this time off? The doctor's slots will open again.")) return;
     try { await bookingApi.deleteTimeOff(id); setTick((n) => n + 1); } catch (err) { setError(errMsg(err, "Couldn't remove")); }
+  }
+  async function addHoliday(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setError(""); setFlash("");
+    try { const { data } = await bookingApi.addClosedDay(hol); setFlash(data.message); setHol({ ...hol, name: "" }); setTick((n) => n + 1); }
+    catch (err) { setError(errMsg(err, "Couldn't save")); } finally { setBusy(false); }
+  }
+  async function removeHoliday(id: string) {
+    if (!window.confirm("Reopen this day for online booking?")) return;
+    try { await bookingApi.removeClosedDay(id); setTick((n) => n + 1); } catch (err) { setError(errMsg(err, "Couldn't remove")); }
+  }
+  async function download(e: React.FormEvent) {
+    e.preventDefault(); setBusy(true); setError("");
+    try {
+      const res = await bookingApi.exportBookings(exp.from, exp.to);
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement("a"); a.href = url; a.download = `lisa-bookings-${exp.from}-to-${exp.to}.csv`; a.click();
+      URL.revokeObjectURL(url);
+    } catch (err: any) {
+      let msg = "Couldn't export";
+      try { msg = JSON.parse(await err?.response?.data?.text?.())?.error ?? msg; } catch { /* keep default */ }
+      setError(msg);
+    } finally { setBusy(false); }
   }
   async function saveSettings(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError(""); setFlash("");
@@ -91,6 +120,56 @@ function Content() {
             </div>
           ))}
         </div>
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--navy)" }}>Closed days (whole hospital)</h2>
+        <p className="text-xs mb-4" style={{ color: "var(--grey-500)" }}>Public holidays or any day we&apos;re shut. Online booking closes for every doctor that day. Reception can still book by phone if needed.</p>
+        <form onSubmit={addHoliday} className="grid sm:grid-cols-4 gap-3 items-end">
+          <Field label="Date" htmlFor="hd-date"><input id="hd-date" type="date" required min={todayLocal()} className={inputCls} style={inputStyle} value={hol.date} onChange={(e) => setHol({ ...hol, date: e.target.value })} /></Field>
+          <div className="sm:col-span-2"><Field label="Name" htmlFor="hd-name"><input id="hd-name" required minLength={2} maxLength={120} className={inputCls} style={inputStyle} value={hol.name} onChange={(e) => setHol({ ...hol, name: e.target.value })} placeholder="e.g. Jamhuri Day" /></Field></div>
+          <button disabled={busy} className="px-4 py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background: "var(--teal)" }}>Close this day</button>
+        </form>
+        <div className="mt-4 divide-y" style={{ borderColor: "var(--grey-200)" }}>
+          {closed.length === 0 && <p className="text-sm" style={{ color: "var(--grey-500)" }}>No closed days coming up.</p>}
+          {closed.map((c) => (
+            <div key={c.id} className="py-2 flex items-center justify-between text-sm"><span style={{ color: "var(--navy)" }}>{nice(c.date)} · {c.name}</span><button onClick={() => removeHoliday(c.id)} className="text-xs font-semibold" style={{ color: "var(--danger)" }}>Reopen</button></div>
+          ))}
+        </div>
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--navy)" }}>Export bookings</h2>
+        <p className="text-xs mb-4" style={{ color: "var(--grey-500)" }}>A spreadsheet (CSV) of every booking in the dates, including attended, missed and cancelled. Opens in Excel. Contains patient names and phones, so keep it safe.</p>
+        <form onSubmit={download} className="flex flex-wrap items-end gap-3">
+          <Field label="From" htmlFor="ex-from"><input id="ex-from" type="date" required className={inputCls} style={inputStyle} value={exp.from} onChange={(e) => setExp({ ...exp, from: e.target.value })} /></Field>
+          <Field label="To" htmlFor="ex-to"><input id="ex-to" type="date" required min={exp.from} className={inputCls} style={inputStyle} value={exp.to} onChange={(e) => setExp({ ...exp, to: e.target.value })} /></Field>
+          <button disabled={busy} className="px-5 py-3 rounded-lg text-sm font-semibold text-white disabled:opacity-50" style={{ background: "var(--navy)" }}>Download CSV</button>
+        </form>
+      </Card>
+
+      <Card>
+        <h2 className="text-sm font-semibold mb-1" style={{ color: "var(--navy)" }}>Attendance, last 90 days</h2>
+        <p className="text-xs mb-4" style={{ color: "var(--grey-500)" }}>Attended = checked in at reception. Missed = marked no-show.</p>
+        {!report ? <p className="text-sm" style={{ color: "var(--grey-500)" }}>Loading...</p> : report.length === 0 ? <p className="text-sm" style={{ color: "var(--grey-500)" }}>No appointments to report yet.</p> : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead><tr className="text-left text-xs" style={{ color: "var(--grey-400)" }}><th className="py-1.5 pr-3 font-medium">Doctor</th><th className="pr-3 font-medium">Department</th><th className="pr-3 font-medium">Attended</th><th className="pr-3 font-medium">Missed</th><th className="pr-3 font-medium">Cancelled</th><th className="font-medium">Miss rate</th></tr></thead>
+              <tbody>
+                {report.map((r) => {
+                  const seen = r.attended + r.noShow;
+                  return (
+                    <tr key={r.doctorId} className="border-t" style={{ borderColor: "var(--grey-100)", color: "var(--navy)" }}>
+                      <td className="py-2 pr-3 font-medium">Dr. {r.firstName} {r.lastName}</td><td className="pr-3">{r.department}</td>
+                      <td className="pr-3">{r.attended}</td><td className="pr-3">{r.noShow}</td><td className="pr-3">{r.cancelled}</td>
+                      <td>{seen ? `${Math.round((r.noShow / seen) * 100)}%` : "–"}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
       </Card>
 
       <Card>
