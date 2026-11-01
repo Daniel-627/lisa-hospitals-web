@@ -6,6 +6,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useClerk, UserButton } from "@clerk/nextjs";
 import { authApi, chatApi } from "@/lib/api";
 import { roleLabel } from "@/lib/format";
+import { acquireSocket, releaseSocket, useSocketConnected } from "@/lib/socket";
 import { LogoMark, Spinner } from "@/components/ui";
 import {
   BedDouble, CalendarCheck, CalendarDays, ClipboardCheck, CreditCard, FileText, FlaskConical, Globe, LayoutDashboard, ListOrdered, LogOut,
@@ -130,9 +131,18 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     return () => { cancelled = true; };
   }, [isLoaded, isSignedIn, router, audience, attempt]);
 
-  // Unread badge for the chat (patients: a reply from Lisa; front desk: patients waiting). Light poll, paused while the tab is hidden.
+  // Unread badge for the chat. Pushed live over the socket; if the socket is down, a light poll keeps it fresh.
+  const socketUp = useSocketConnected();
   useEffect(() => {
     if (!chatRole || (chatRole !== "patient" && chatRole !== "admin" && chatRole !== "receptionist")) return;
+    const s = acquireSocket();
+    const isPatient = chatRole === "patient";
+    const onUnread = (d: { count?: number; unread?: boolean }) => setUnread(isPatient ? (d.unread ? 1 : 0) : (d.count ?? 0));
+    s.on("unread", onUnread);
+    return () => { s.off("unread", onUnread); releaseSocket(); };
+  }, [chatRole]);
+  useEffect(() => {
+    if (!chatRole || socketUp || (chatRole !== "patient" && chatRole !== "admin" && chatRole !== "receptionist")) return;
     let stop = false;
     const tick = async () => {
       if (document.hidden) return;
@@ -144,7 +154,11 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     tick();
     const t = setInterval(tick, 20_000);
     return () => { stop = true; clearInterval(t); };
-  }, [chatRole]);
+  }, [chatRole, socketUp]);
+  useEffect(() => {
+    const base = document.title.replace(/^\(\d+\+?\) /, "");
+    document.title = unread > 0 ? `(${unread > 9 ? "9+" : unread}) ${base}` : base;
+  }, [unread]);
 
   if (error) {
     return (

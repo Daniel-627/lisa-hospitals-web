@@ -234,15 +234,19 @@ export const bookingApi = {
   saveSettings: (data: any)             => api.put("/api/booking/staff/settings", data),
 };
 
+export type ChatFile = { url: string; name: string };
 // Chat: patients talk to "Lisa" (they never see staff names); the front desk shares one inbox.
 export const chatApi = {
   mine:        (after?: string)             => api.get("/api/chat/mine", { params: { after } }),
-  send:        (body: string)               => api.post("/api/chat/mine", { body }),
+  send:        (body: string, attachment?: ChatFile | null) => api.post("/api/chat/mine", { body, attachment: attachment ?? undefined }),
   markRead:    ()                           => api.post("/api/chat/mine/read"),
   mineUnread:  ()                           => api.get("/api/chat/mine/unread"),
   visits:      ()                           => api.get("/api/chat/visits"),
   threads:     (q?: string)                 => api.get("/api/chat/threads", { params: { q } }),
   staffUnread: ()                           => api.get("/api/chat/threads/unread"),
-  open:        (id: string)                 => api.get(`/api/chat/threads/${id}`),
-  reply:       (id: string, body: string)   => api.post(`/api/chat/threads/${id}`, { body }),
+  open:        (id: string, peek = false)   => api.get(`/api/chat/threads/${id}`, { params: peek ? { peek: 1 } : undefined }),
+  reply:       (id: string, body: string, attachment?: ChatFile | null) => api.post(`/api/chat/threads/${id}`, { body, attachment: attachment ?? undefined }),
+  seen:        (id: string)                 => api.post(`/api/chat/threads/${id}/seen`),
+  findPatients:(q: string)                  => api.get("/api/chat/patients", { params: { q } }),
+  start:       (patientUserId: string, body: string, attachment?: ChatFile | null) => api.post("/api/chat/threads", { patientUserId, body, attachment: attachment ?? undefined }),
 };
