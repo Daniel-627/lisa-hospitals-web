@@ -70,7 +70,7 @@ export default async function DoctorPage({ params }: Props) {
         {slots.length === 0 ? (
           <p className="text-sm mb-8" style={{ color: "var(--grey-500)" }}>Clinic hours aren&apos;t listed yet. Choose a time when you book and we&apos;ll confirm it.</p>
         ) : (
-          <div className="rounded-xl border divide-y mb-8" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <div className="rounded-xl border divide-y mb-8" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             {slots.map((s) => (
               <div key={s.id} className="flex justify-between px-5 py-3 text-sm">
                 <span style={{ color: "var(--navy)" }}>{DAYS[s.dayOfWeek]}</span>

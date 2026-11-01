@@ -71,7 +71,7 @@ export default function HomePage() {
                 className="group relative rounded-2xl border p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
                 style={{
                   borderColor: "var(--grey-200)",
-                  background: "white",
+                  background: "var(--surface)",
                 }}
               >
                 {/* Accent */}
@@ -162,7 +162,7 @@ export default function HomePage() {
                 key={insurer}
                 className="rounded-xl px-6 py-3.5 text-sm font-bold shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
                 style={{
-                  background: "white",
+                  background: "var(--surface)",
                   border: "1px solid var(--grey-200)",
                   color: "var(--navy)",
                 }}
@@ -214,12 +214,12 @@ export default function HomePage() {
         {/* Decorative circles */}
         <div
           className="pointer-events-none absolute -right-20 -top-20 h-60 w-60 rounded-full opacity-10"
-          style={{ background: "white" }}
+          style={{ background: "var(--surface)" }}
         />
 
         <div
           className="pointer-events-none absolute -bottom-32 -left-20 h-72 w-72 rounded-full opacity-10"
-          style={{ background: "white" }}
+          style={{ background: "var(--surface)" }}
         />
 
         <div className="relative z-10 mx-auto max-w-2xl">
@@ -250,7 +250,7 @@ export default function HomePage() {
               href={BOOK_URL}
               className="rounded-lg px-8 py-3.5 text-sm font-bold transition-all hover:-translate-y-0.5 hover:shadow-lg"
               style={{
-                background: "white",
+                background: "var(--surface)",
                 color: "var(--teal)",
               }}
             >

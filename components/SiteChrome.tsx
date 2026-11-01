@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
+import LisaWidget from "@/components/LisaWidget";
 
 // Pages that have their own full-screen layout (portals, sign-in/up, setup) do NOT get the public nav/footer.
 // Everything else — home, services, doctors, news, about, contact, the 404 page, future public pages — does.
@@ -16,6 +17,7 @@ export default function SiteChrome({ nav, footer, children }: { nav: ReactNode; 
       {nav}
       <main className="flex-1">{children}</main>
       {footer}
+      <LisaWidget />
     </div>
   );
 }

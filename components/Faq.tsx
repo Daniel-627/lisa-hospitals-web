@@ -3,7 +3,7 @@ import type { Faq } from "@/lib/faqs";
 /** Questions and answers as native <details>: works without JavaScript, and the full text is in the page for crawlers. */
 export default function FaqList({ faqs }: { faqs: Faq[] }) {
   return (
-    <div className="divide-y rounded-xl border bg-white" style={{ borderColor: "var(--grey-200)" }}>
+    <div className="divide-y rounded-xl border bg-[var(--surface)]" style={{ borderColor: "var(--grey-200)" }}>
       {faqs.map((f) => (
         <details key={f.q} className="group px-5 py-4" style={{ borderColor: "var(--grey-200)" }}>
           <summary className="cursor-pointer list-none text-sm font-semibold flex justify-between gap-4" style={{ color: "var(--navy)" }}>

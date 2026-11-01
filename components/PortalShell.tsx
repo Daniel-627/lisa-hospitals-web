@@ -4,12 +4,12 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useAuth, useClerk, UserButton } from "@clerk/nextjs";
-import { authApi } from "@/lib/api";
+import { authApi, chatApi } from "@/lib/api";
 import { roleLabel } from "@/lib/format";
 import { LogoMark, Spinner } from "@/components/ui";
 import {
   BedDouble, CalendarCheck, CalendarDays, ClipboardCheck, CreditCard, FileText, FlaskConical, Globe, LayoutDashboard, ListOrdered, LogOut,
-  Menu, MessageSquare, Newspaper, Pill, ScrollText, Settings, Stethoscope, Users, UserRound, Receipt, type LucideIcon,
+  Menu, MessageSquare, MessagesSquare, Moon, Sun, History, Newspaper, Pill, ScrollText, Settings, Stethoscope, Users, UserRound, Receipt, type LucideIcon,
 } from "lucide-react";
 import { CLINICAL } from "@/lib/features";
 
@@ -29,12 +29,13 @@ const NAV_ICONS: Record<string, LucideIcon> = {
   "/staff/pharmacy": Pill, "/staff/documents": FileText, "/patient/dashboard": UserRound, "/patient/appointments/book": CalendarCheck,
   "/patient/documents": FileText, "/patient/invoices": Receipt, "/patient/admissions": BedDouble, "/patient/results": FlaskConical, "/patient/profile": UserRound,
   "/admin/dashboard": LayoutDashboard, "/admin/users": Users, "/admin/news": Newspaper, "/admin/enquiries": MessageSquare,
-  "/admin/audit": ScrollText, "/admin/booking": Settings, "/admin/services": Stethoscope,
+  "/admin/audit": ScrollText, "/staff/messages": MessagesSquare, "/book": CalendarCheck, "/patient/messages": MessagesSquare, "/patient/visits": History, "/admin/booking": Settings, "/admin/services": Stethoscope,
 };
 
 const NAV = {
   staff: [
     { href: "/staff/bookings", label: "Bookings", roles: ["admin", "receptionist", "doctor"] },
+    { href: "/staff/messages", label: "Lisa chat", roles: ["admin", "receptionist"] },
     { href: "/staff/calendar", label: "My calendar", roles: ["doctor"] },
     { href: "/staff/dashboard", label: "Dashboard" },
     { href: "/staff/queue", label: "Queue", roles: ["receptionist", "nurse", "doctor", "admin"] },
@@ -62,6 +63,9 @@ const NAV = {
     { href: "/staff/dashboard", label: "Staff portal" },
   ],
   patient: [
+    { href: "/patient/visits", label: "My visits" },
+    { href: "/patient/messages", label: "Messages" },
+    { href: "/book", label: "Book a visit" },
     { href: "/patient/dashboard", label: "Dashboard" },
     { href: "/patient/appointments/book", label: "Book" },
     { href: "/patient/documents", label: "Documents" },
@@ -88,6 +92,15 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
   const [error, setError] = useState("");
   const [attempt, setAttempt] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [dark, setDark] = useState<boolean>(() => {
+    try { return typeof window !== "undefined" && localStorage.getItem("lh-theme") === "dark"; } catch { return false; }
+  });
+  const [unread, setUnread] = useState(0);
+  const toggleTheme = () => setDark((d) => {
+    try { localStorage.setItem("lh-theme", d ? "light" : "dark"); } catch { /* private mode: still works for this visit */ }
+    return !d;
+  });
+  const chatRole = me?.role;
 
   useEffect(() => {
     if (!isLoaded) return;
@@ -116,6 +129,22 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     })();
     return () => { cancelled = true; };
   }, [isLoaded, isSignedIn, router, audience, attempt]);
+
+  // Unread badge for the chat (patients: a reply from Lisa; front desk: patients waiting). Light poll, paused while the tab is hidden.
+  useEffect(() => {
+    if (!chatRole || (chatRole !== "patient" && chatRole !== "admin" && chatRole !== "receptionist")) return;
+    let stop = false;
+    const tick = async () => {
+      if (document.hidden) return;
+      try {
+        const { data } = chatRole === "patient" ? await chatApi.mineUnread() : await chatApi.staffUnread();
+        if (!stop) setUnread(chatRole === "patient" ? (data.data.unread ? 1 : 0) : data.data.unread);
+      } catch { /* the badge is a nicety: ignore */ }
+    };
+    tick();
+    const t = setInterval(tick, 20_000);
+    return () => { stop = true; clearInterval(t); };
+  }, [chatRole]);
 
   if (error) {
     return (
@@ -146,16 +175,16 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     : base;
   // Some tabs only make sense for certain roles (the server enforces this too).
   // Booking-only mode: just the booking desk, plus admin tools that aren't clinical.
-  const BOOKING_ONLY = new Set(["/staff/bookings", "/staff/calendar", "/admin/services", "/admin/dashboard", "/admin/users", "/admin/booking", "/admin/news", "/admin/enquiries", "/admin/audit"]);
-  const scoped = CLINICAL ? links : links.filter((l) => BOOKING_ONLY.has(l.href));
+  const BOOKING_ONLY = new Set(["/patient/visits", "/patient/messages", "/book", "/staff/messages", "/staff/bookings", "/staff/calendar", "/admin/services", "/admin/dashboard", "/admin/users", "/admin/booking", "/admin/news", "/admin/enquiries", "/admin/audit"]);
+  const scoped = CLINICAL ? links.filter((l) => l.href !== "/book") : links.filter((l) => BOOKING_ONLY.has(l.href));
   const visible = scoped.filter((l) => !(l as NavItem).roles || (l as NavItem).roles!.includes(me.role));
   const resolve = (v: Slot) => (typeof v === "function" ? v(me) : v);
   const isActive = (href: string) => pathname === href || pathname.startsWith(href + "/");
   const GROUPS: [string, string[]][] = [
-    ["Appointments", ["/staff/bookings", "/staff/calendar", "/admin/booking", "/admin/services"]],
+    ["Appointments", ["/staff/bookings", "/staff/messages", "/staff/calendar", "/admin/booking", "/admin/services"]],
     ["Manage", ["/admin/dashboard", "/admin/users", "/admin/news", "/admin/enquiries", "/admin/audit"]],
   ];
-  const grouped = CLINICAL
+  const grouped = CLINICAL || audience === "patient"
     ? [["Menu", visible] as [string, readonly NavItem[]]]
     : [...GROUPS.map(([g, hrefs]) => [g, visible.filter((l) => hrefs.includes(l.href))] as [string, readonly NavItem[]]),
        ["More", visible.filter((l) => !GROUPS.some(([, h]) => h.includes(l.href)))] as [string, readonly NavItem[]]].filter(([, items]) => items.length > 0);
@@ -164,13 +193,13 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
 
   return (
     <MeContext.Provider value={me}>
-      <div className="portal min-h-screen flex" style={{ background: "var(--page)" }}>
+      <div className={`portal min-h-screen flex ${dark ? "dark" : ""}`} style={{ background: "var(--page)" }}>
         {/* Mobile: dark overlay behind the open menu */}
         {menuOpen && <div className="fixed inset-0 z-40 bg-black/40 lg:hidden no-print" onClick={() => setMenuOpen(false)} aria-hidden />}
 
         <aside
           className={`no-print fixed inset-y-0 left-0 z-50 w-[280px] flex flex-col border-r transition-transform duration-200 lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${menuOpen ? "translate-x-0" : "-translate-x-full"}`}
-          style={{ background: "white", borderColor: "var(--grey-200)" }} aria-label="Portal menu"
+          style={{ background: "var(--surface)", borderColor: "var(--grey-200)" }} aria-label="Portal menu"
         >
           <div className="h-[72px] px-5 flex items-center gap-3 border-b shrink-0" style={{ borderColor: "var(--grey-200)" }}>
             <LogoMark />
@@ -194,7 +223,10 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
                           className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors hover:bg-[var(--grey-100)]"
                           style={{ background: active ? "var(--teal-light)" : undefined, color: active ? "var(--teal-dark)" : "var(--grey-600)" }}>
                           <Ic className="size-5 shrink-0" aria-hidden />
-                          {l.label}
+                          <span className="flex-1">{l.label}</span>
+                          {unread > 0 && (l.href === "/staff/messages" || l.href === "/patient/messages") && (
+                            <span className="min-w-5 h-5 px-1.5 rounded-full text-[11px] font-semibold text-white flex items-center justify-center" style={{ background: "var(--danger)" }} aria-label={`${unread} unread`}>{unread > 9 ? "9+" : unread}</span>
+                          )}
                         </Link>
                       </li>
                     );
@@ -221,7 +253,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
         </aside>
 
         <div className="flex-1 min-w-0 flex flex-col">
-          <header className="no-print sticky top-0 z-30 h-[72px] flex items-center gap-3 px-4 sm:px-6 border-b" style={{ background: "white", borderColor: "var(--grey-200)" }}>
+          <header className="no-print sticky top-0 z-30 h-[72px] flex items-center gap-3 px-4 sm:px-6 border-b" style={{ background: "var(--surface)", borderColor: "var(--grey-200)" }}>
             <button onClick={() => setMenuOpen(true)} aria-label="Open menu" className="lg:hidden size-10 rounded-lg border flex items-center justify-center" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
               <Menu className="size-5" aria-hidden />
             </button>
@@ -229,9 +261,16 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
               <div className="text-[11px] uppercase tracking-wider truncate" style={{ color: "var(--grey-400)" }}>{areaLabel}</div>
               <div className="text-sm font-medium truncate" style={{ color: "var(--navy)" }}>{new Date().toLocaleDateString("en-KE", { weekday: "long", day: "numeric", month: "long" })}</div>
             </div>
+            <button onClick={toggleTheme} aria-label={dark ? "Switch to light mode" : "Switch to dark mode"} title={dark ? "Light mode" : "Dark mode"}
+              className="size-10 rounded-lg border flex items-center justify-center hover:bg-[var(--grey-100)]" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
+              {dark ? <Sun className="size-5" aria-hidden /> : <Moon className="size-5" aria-hidden />}
+            </button>
             <Link href="/" className="text-sm font-medium px-3 py-2 rounded-lg border hidden sm:inline-flex items-center gap-2 hover:bg-[var(--grey-100)]" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
               <Globe className="size-4" aria-hidden /> Public site
             </Link>
+            <button onClick={() => signOut({ redirectUrl: "/login" })} className="text-sm font-medium px-3 h-10 rounded-lg border inline-flex items-center gap-2 hover:bg-[var(--grey-100)]" style={{ borderColor: "var(--grey-200)", color: "var(--grey-600)" }}>
+              <LogOut className="size-4" aria-hidden /> <span className="hidden sm:inline">Sign out</span><span className="sr-only sm:hidden">Sign out</span>
+            </button>
           </header>
 
           <main className="flex-1 w-full max-w-[1400px] mx-auto px-4 sm:px-6 py-6 sm:py-8">

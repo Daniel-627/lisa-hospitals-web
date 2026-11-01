@@ -31,7 +31,7 @@ export default async function ServicesPage() {
             const l = live.get(d.slug);
             const is24 = l?.isOpen24hrs ?? d.is24;
             return (
-              <Link key={d.slug} href={`/services/${toUrlSlug(d.slug)}`} className="block p-6 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+              <Link key={d.slug} href={`/services/${toUrlSlug(d.slug)}`} className="block p-6 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
                 <div className="flex items-start justify-between mb-3">
                   <div className="text-3xl" style={{ color: "var(--teal)" }} aria-hidden><Icon name={d.icon} /></div>
                   {is24 && <Badge24 label={d.badge ?? "24HR"} />}

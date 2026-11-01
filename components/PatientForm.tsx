@@ -104,7 +104,7 @@ export default function PatientForm({ patient }: { patient?: any }) {
           </p>
           <div className="space-y-2 mb-4">
             {dup.matches.map((m) => (
-              <div key={m.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-white text-sm">
+              <div key={m.id} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-[var(--surface)] text-sm">
                 <span style={{ color: "var(--navy)" }}>
                   <strong>{m.firstName} {m.lastName}</strong> · {m.patientNumber} · born {fmtDate(m.dateOfBirth)}{m.phone ? ` · ${m.phone}` : ""}
                 </span>

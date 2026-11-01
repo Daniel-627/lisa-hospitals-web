@@ -41,7 +41,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-normal text-center mb-8" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>What we stand for</h2>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {values.map((v) => (
-              <div key={v.title} className="p-6 rounded-xl border" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+              <div key={v.title} className="p-6 rounded-xl border" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
                 <div className="text-2xl mb-3" style={{ color: "var(--teal)" }} aria-hidden><Icon name={v.icon} /></div>
                 <h3 className="text-sm font-semibold mb-1" style={{ color: "var(--navy)" }}>{v.title}</h3>
                 <p className="text-sm leading-relaxed" style={{ color: "var(--grey-500)" }}>{v.text}</p>
@@ -57,7 +57,7 @@ export default function AboutPage() {
           <p className="text-sm mb-4" style={{ color: "var(--grey-500)" }}>We are a direct facility for these schemes — no referrals needed.</p>
           <div className="flex gap-3 flex-wrap">
             {HOSPITAL.insurers.map((i) => (
-              <span key={i} className="px-5 py-2 rounded-lg font-bold text-sm" style={{ background: "white", border: "1.5px solid var(--grey-200)", color: "var(--navy)" }}>{i}</span>
+              <span key={i} className="px-5 py-2 rounded-lg font-bold text-sm" style={{ background: "var(--surface)", border: "1.5px solid var(--grey-200)", color: "var(--navy)" }}>{i}</span>
             ))}
           </div>
         </div>

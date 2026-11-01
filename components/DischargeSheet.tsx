@@ -19,7 +19,7 @@ const Block = ({ label, children }: { label: string; children?: string | null })
 /** Printable discharge summary: used by staff and by the patient. */
 export default function DischargeSheet({ patient, stay, summary, dischargedBy }: Props) {
   return (
-    <div className="print-sheet p-6 sm:p-8 rounded-xl border bg-white" style={{ borderColor: "var(--grey-200)" }}>
+    <div className="print-sheet p-6 sm:p-8 rounded-xl border bg-[var(--surface)]" style={{ borderColor: "var(--grey-200)" }}>
       <div className="mb-6">
         <div className="text-lg font-semibold" style={{ color: "var(--navy)", fontFamily: "var(--font-display)" }}>{HOSPITAL.name}</div>
         <div className="text-xs" style={{ color: "var(--grey-500)" }}>{HOSPITAL.addressLines.join(", ")} · {HOSPITAL.phoneDisplay}</div>

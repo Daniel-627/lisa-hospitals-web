@@ -2,7 +2,7 @@ import type { CSSProperties, ReactNode } from "react";
 import { urgencyInfo } from "@/lib/format";
 
 export const inputCls = "w-full px-4 py-3 rounded-lg border text-sm outline-none";
-export const inputStyle: CSSProperties = { borderColor: "var(--grey-200)", color: "var(--navy)", background: "white" };
+export const inputStyle: CSSProperties = { borderColor: "var(--grey-200)", color: "var(--navy)", background: "var(--surface)" };
 
 export function LogoMark({ size = 32 }: { size?: number }) {
   return (
@@ -55,7 +55,7 @@ export function StatusBadge({ status }: { status: string }) {
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
   return (
-    <div className={`p-5 rounded-xl border ${className}`} style={{ borderColor: "var(--grey-200)", background: "white" }}>{children}</div>
+    <div className={`p-5 rounded-xl border ${className}`} style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>{children}</div>
   );
 }
 

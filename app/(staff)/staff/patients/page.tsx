@@ -76,7 +76,7 @@ function PatientsList() {
           {rows.map((p) => (
             <Link key={p.id} href={`/staff/patients/${p.id}`}
               className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 items-center p-4 rounded-xl border transition-all hover:shadow-md"
-              style={{ borderColor: "var(--grey-200)", background: "white" }}>
+              style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
               <div className="col-span-2 md:col-span-2">
                 <div className="font-semibold text-sm" style={{ color: "var(--navy)" }}>{p.firstName} {p.lastName}</div>
                 <div className="text-xs" style={{ color: "var(--grey-400)" }}>{p.patientNumber}{p.hasAccount === false ? " · walk-in" : ""}</div>

@@ -233,3 +233,16 @@ export const bookingApi = {
   settings:     ()                      => api.get("/api/booking/staff/settings"),
   saveSettings: (data: any)             => api.put("/api/booking/staff/settings", data),
 };
+
+// Chat: patients talk to "Lisa" (they never see staff names); the front desk shares one inbox.
+export const chatApi = {
+  mine:        (after?: string)             => api.get("/api/chat/mine", { params: { after } }),
+  send:        (body: string)               => api.post("/api/chat/mine", { body }),
+  markRead:    ()                           => api.post("/api/chat/mine/read"),
+  mineUnread:  ()                           => api.get("/api/chat/mine/unread"),
+  visits:      ()                           => api.get("/api/chat/visits"),
+  threads:     (q?: string)                 => api.get("/api/chat/threads", { params: { q } }),
+  staffUnread: ()                           => api.get("/api/chat/threads/unread"),
+  open:        (id: string)                 => api.get(`/api/chat/threads/${id}`),
+  reply:       (id: string, body: string)   => api.post(`/api/chat/threads/${id}`, { body }),
+};

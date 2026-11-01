@@ -30,7 +30,7 @@ export default function ContactPage() {
                 { icon: "location", label: "Address", value: `${HOSPITAL.addressLines.join(", ")}`, href: `https://www.google.com/maps/dir/?api=1&destination=${q}` },
                 { icon: "clock", label: "Hours", value: HOSPITAL.hours },
               ].map((c) => (
-                <div key={c.label} className="p-5 rounded-xl border" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+                <div key={c.label} className="p-5 rounded-xl border" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
                   <div className="text-xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={c.icon} /></div>
                   <div className="text-xs mb-1" style={{ color: "var(--grey-400)" }}>{c.label}</div>
                   {c.href ? (
@@ -47,7 +47,7 @@ export default function ContactPage() {
             <a href={`https://www.google.com/maps/dir/?api=1&destination=${q}`} target="_blank" rel="noopener noreferrer" className="inline-block mt-3 text-sm font-semibold" style={{ color: "var(--teal)" }}>Get directions<Next /></a>
           </div>
 
-          <div className="p-6 md:p-8 rounded-xl border h-fit" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <div className="p-6 md:p-8 rounded-xl border h-fit" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             <h2 className="text-2xl font-normal mb-5" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>Send us a message</h2>
             <ContactForm />
           </div>

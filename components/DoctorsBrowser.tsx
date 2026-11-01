@@ -25,7 +25,7 @@ export default function DoctorsBrowser({ doctors }: { doctors: Doc[] }) {
       <div className="flex flex-col md:flex-row gap-4 md:items-center mb-8">
         <label htmlFor="doc-search" className="sr-only">Search doctors</label>
         <input id="doc-search" type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search by name or speciality…"
-          className="w-full md:w-72 px-4 py-3 rounded-lg border text-sm outline-none" style={{ borderColor: "var(--grey-200)", color: "var(--navy)", background: "white" }} />
+          className="w-full md:w-72 px-4 py-3 rounded-lg border text-sm outline-none" style={{ borderColor: "var(--grey-200)", color: "var(--navy)", background: "var(--surface)" }} />
         <div className="flex gap-2 flex-wrap">
           {[{ slug: "all", name: "All" }, ...departments].map((d) => (
             <button key={d.slug} type="button" onClick={() => setDept(d.slug)} aria-pressed={dept === d.slug}

@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import PortalShell from "@/components/PortalShell";
+import { CLINICAL } from "@/lib/features";
 import { Card, ErrorBox, Spinner, StatusBadge } from "@/components/ui";
 import { appointmentsApi, patientsApi } from "@/lib/api";
 import { errMsg, fmtDate, hhmm, insuranceLabel } from "@/lib/format";
@@ -18,6 +20,9 @@ const quickActions = [
 ];
 
 function Content() {
+  const router = useRouter();
+  // Booking-only mode has no clinical dashboard: the visit log is the patient home.
+  useEffect(() => { if (!CLINICAL) router.replace("/patient/visits"); }, [router]);
   const [appointments, setAppointments] = useState<any[] | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [error, setError] = useState("");
@@ -26,6 +31,7 @@ function Content() {
   const [enrolling, setEnrolling] = useState(false);
 
   useEffect(() => {
+    if (!CLINICAL) return;
     let cancelled = false;
     Promise.all([appointmentsApi.getMine(), patientsApi.getProfile()])
       .then(([a, p]) => { if (!cancelled) { setAppointments(a.data.data); setProfile(p.data.data); } })
@@ -100,12 +106,12 @@ function Content() {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-10">
         {quickActions.map((a) => a.href ? (
-          <Link key={a.label} href={a.href} className="p-5 rounded-xl border text-center transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <Link key={a.label} href={a.href} className="p-5 rounded-xl border text-center transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={a.icon} /></div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
           </Link>
         ) : (
-          <div key={a.label} className="p-5 rounded-xl border text-center opacity-60" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <div key={a.label} className="p-5 rounded-xl border text-center opacity-60" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={a.icon} /></div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
             <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>Coming soon</div>

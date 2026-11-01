@@ -23,7 +23,7 @@ export function Section({ children, className = "", narrow = false }: { children
 
 export function Unavailable({ what }: { what: string }) {
   return (
-    <div className="p-8 rounded-xl border text-center" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+    <div className="p-8 rounded-xl border text-center" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
       <p className="text-sm" style={{ color: "var(--grey-500)" }}>
         We couldn&apos;t load {what} just now. Please refresh in a moment, or call us on the number above.
       </p>

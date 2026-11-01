@@ -60,7 +60,7 @@ export default async function ServicePage({ params }: Props) {
             </div>
           </div>
 
-          <aside className="p-6 rounded-xl border h-fit" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <aside className="p-6 rounded-xl border h-fit" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             <div className="space-y-4 text-sm">
               <div>
                 <div className="text-xs mb-1" style={{ color: "var(--grey-400)" }}>Hours</div>

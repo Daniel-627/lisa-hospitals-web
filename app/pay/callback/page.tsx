@@ -33,7 +33,7 @@ function Callback() {
     return () => { cancelled = true; if (timer) clearTimeout(timer); };
   }, [reference, tries]);
 
-  const box = "max-w-md mx-auto text-center p-8 rounded-xl border bg-white";
+  const box = "max-w-md mx-auto text-center p-8 rounded-xl border bg-[var(--surface)]";
   const wrap = { borderColor: "var(--grey-200)" };
 
   if (!reference) return <div className={box} style={wrap}><p className="text-sm" style={{ color: "var(--grey-500)" }}>No payment to check. <Link href="/patient/invoices" style={{ color: "var(--teal)" }}>Go to my invoices</Link></p></div>;

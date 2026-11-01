@@ -44,7 +44,7 @@ export function PhoneLink({ phone }: { phone?: string }) {
 export function Sheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   return (
     <div role="dialog" aria-modal="true" aria-label={title} className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-4" style={{ background: "rgba(10,25,47,0.5)" }} onClick={onClose}>
-      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl p-6 bg-white" onClick={(e) => e.stopPropagation()}>
+      <div className="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-xl p-6 bg-[var(--surface)]" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-lg" style={{ fontFamily: "var(--font-display)", color: "var(--navy)" }}>{title}</h2>
           <button onClick={onClose} aria-label="Close" className="text-xl px-2" style={{ color: "var(--grey-500)" }}>×</button>
@@ -165,7 +165,7 @@ export function WaitlistPanel({ tick, onChanged }: { tick: number; onChanged: (m
         <div className="space-y-2">
           {error && <ErrorBox>{error}</ErrorBox>}
           {rows.map((w) => (
-            <div key={w.id} className="p-3 rounded-lg border bg-white" style={{ borderColor: w.nextFree ? "var(--teal)" : "var(--grey-200)" }}>
+            <div key={w.id} className="p-3 rounded-lg border bg-[var(--surface)]" style={{ borderColor: w.nextFree ? "var(--teal)" : "var(--grey-200)" }}>
               <div className="flex flex-wrap items-start gap-x-4 gap-y-1">
                 <div className="flex-1 min-w-[14rem]">
                   <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{w.guestName}</div>

@@ -6,7 +6,7 @@ import { PAY_STATUS, fmtDateTime, fmtKes, insuranceLabel, owed, payMethodLabel }
 export default function InvoiceSheet({ inv }: { inv: any }) {
   const st = PAY_STATUS[inv.paymentStatus];
   return (
-    <div className="print-sheet p-6 sm:p-8 rounded-xl border bg-white" style={{ borderColor: "var(--grey-200)" }}>
+    <div className="print-sheet p-6 sm:p-8 rounded-xl border bg-[var(--surface)]" style={{ borderColor: "var(--grey-200)" }}>
       <div className="flex justify-between flex-wrap gap-4 mb-6">
         <div>
           <div className="text-lg font-semibold" style={{ color: "var(--navy)", fontFamily: "var(--font-display)" }}>{HOSPITAL.name}</div>

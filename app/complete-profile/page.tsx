@@ -58,7 +58,7 @@ export default function CompleteProfilePage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--navy)" }}>
-      <div className="w-full max-w-md p-8 rounded-xl" style={{ background: "white" }}>
+      <div className="w-full max-w-md p-8 rounded-xl" style={{ background: "var(--surface)" }}>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3" style={{ background: "var(--teal)" }}>
             <svg width="20" height="20" viewBox="0 0 20 20" fill="none">

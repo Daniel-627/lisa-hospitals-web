@@ -37,7 +37,7 @@ function Content() {
       <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-10">
         {cards.map((c) => (
           <Link key={c.label} href={c.href} className="p-5 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5"
-            style={{ borderColor: c.highlight ? "var(--teal)" : "var(--grey-200)", background: "white" }}>
+            style={{ borderColor: c.highlight ? "var(--teal)" : "var(--grey-200)", background: "var(--surface)" }}>
             <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={c.icon} /></div>
             <div className="text-3xl font-bold mb-1" style={{ color: "var(--navy)", fontFamily: "var(--font-display)" }}>{c.value}</div>
             <div className="text-xs" style={{ color: "var(--grey-500)" }}>{c.label}</div>

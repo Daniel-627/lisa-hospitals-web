@@ -35,7 +35,7 @@ export default async function NewsPage({ searchParams }: Props) {
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {data.map((p) => (
-              <Link key={p.id} href={`/news/${p.slug}`} className="block rounded-xl border overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+              <Link key={p.id} href={`/news/${p.slug}`} className="block rounded-xl border overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
                 {p.coverImage ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img src={fit(p.coverImage, 600)} alt="" loading="lazy" className="w-full h-44 object-cover" />

@@ -9,7 +9,7 @@ export type DoctorLite = {
 export default function DoctorCard({ d }: { d: DoctorLite }) {
   const initials = `${d.firstName?.[0] ?? ""}${d.lastName?.[0] ?? ""}`.toUpperCase();
   return (
-    <Link href={`/doctors/${d.id}`} className="block p-5 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+    <Link href={`/doctors/${d.id}`} className="block p-5 rounded-xl border transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
       <div className="flex items-center gap-4">
         {d.photoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element

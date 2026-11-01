@@ -90,7 +90,7 @@ function UsersList() {
           {rows.map((u) => {
             const self = u.id === me.id;
             return (
-              <div key={u.id} className="p-4 rounded-xl border flex items-center justify-between gap-4 flex-wrap" style={{ borderColor: "var(--grey-200)", background: "white", opacity: u.isActive ? 1 : 0.65 }}>
+              <div key={u.id} className="p-4 rounded-xl border flex items-center justify-between gap-4 flex-wrap" style={{ borderColor: "var(--grey-200)", background: "var(--surface)", opacity: u.isActive ? 1 : 0.65 }}>
                 <div className="min-w-0">
                   <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>
                     {u.firstName} {u.lastName} {self && <span className="font-normal" style={{ color: "var(--grey-400)" }}>(you)</span>}
@@ -107,7 +107,7 @@ function UsersList() {
                   <label className="sr-only" htmlFor={`role-${u.id}`}>Role for {u.firstName}</label>
                   <select id={`role-${u.id}`} value={u.role} disabled={self || busyId === u.id}
                     onChange={(e) => patchUser(u, { role: e.target.value }, `Change ${u.firstName}'s role to ${roleLabel(e.target.value)}?`)}
-                    className="px-3 py-2 rounded-lg border text-xs font-semibold outline-none disabled:opacity-60" style={{ borderColor: "var(--grey-200)", color: "var(--navy)", background: "white" }}>
+                    className="px-3 py-2 rounded-lg border text-xs font-semibold outline-none disabled:opacity-60" style={{ borderColor: "var(--grey-200)", color: "var(--navy)", background: "var(--surface)" }}>
                     {ROLES.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
                   </select>
                   <button onClick={() => patchUser(u, { isActive: !u.isActive }, u.isActive ? `Deactivate ${u.firstName}? They will no longer be able to sign in.` : `Reactivate ${u.firstName}?`)}

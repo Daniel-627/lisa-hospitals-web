@@ -58,12 +58,12 @@ function Content() {
       <h2 className="text-xl font-semibold mb-4" style={{ color: "var(--navy)" }}>Quick Actions</h2>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {actions.filter((a) => !a.roles || a.roles.includes(me.role)).map((a) => a.href ? (
-          <Link key={a.label} href={a.href} className="p-5 rounded-xl border text-center transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <Link key={a.label} href={a.href} className="p-5 rounded-xl border text-center transition-all hover:shadow-md hover:-translate-y-0.5" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={a.icon} /></div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
           </Link>
         ) : (
-          <div key={a.label} className="p-5 rounded-xl border text-center opacity-60" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+          <div key={a.label} className="p-5 rounded-xl border text-center opacity-60" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
             <div className="text-2xl mb-2" style={{ color: "var(--teal)" }} aria-hidden><Icon name={a.icon} /></div>
             <div className="text-sm font-semibold" style={{ color: "var(--navy)" }}>{a.label}</div>
             <div className="text-xs mt-1" style={{ color: "var(--grey-400)" }}>Coming soon</div>

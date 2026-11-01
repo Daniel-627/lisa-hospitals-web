@@ -216,7 +216,7 @@ function BookForm() {
           <div>
             <h2 className="text-lg font-semibold mb-6" style={{ color: "var(--navy)" }}>Confirm Appointment</h2>
 
-            <div className="p-6 rounded-xl border mb-6" style={{ borderColor: "var(--grey-200)", background: "white" }}>
+            <div className="p-6 rounded-xl border mb-6" style={{ borderColor: "var(--grey-200)", background: "var(--surface)" }}>
               <div className="space-y-4">
                 <Row label="Department" value={deptName} />
                 {doctorName && <Row label="Doctor" value={doctorName} />}
