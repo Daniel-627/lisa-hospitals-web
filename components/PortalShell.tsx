@@ -56,10 +56,11 @@ const NAV = {
     { href: "/admin/dashboard", label: "Dashboard" },
     { href: "/admin/users", label: "Users" },
     { href: "/staff/bookings", label: "Bookings" },
+    { href: "/staff/messages", label: "Lisa chat" },
     { href: "/admin/booking", label: "Booking settings" },
     { href: "/admin/services", label: "Services" },
     { href: "/admin/news", label: "News" },
-    { href: "/admin/enquiries", label: "Messages" },
+    { href: "/admin/enquiries", label: "Enquiries" },
     { href: "/admin/audit", label: "Audit log" },
     { href: "/staff/dashboard", label: "Staff portal" },
   ],
@@ -183,8 +184,11 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
   type NavItem = { href: string; label: string; roles?: readonly string[] };
   const base: readonly NavItem[] = NAV[audience];
   // Admins get an "Admin" tab in the staff portal so they can jump back.
+  // An admin gets ONE menu in both portals (booking desk, chat and admin tools together), so moving between
+  // /staff and /admin pages never changes the sidebar. Other roles keep their own.
   const links =
-    audience === "staff" && me.role === "admin" ? [...base, { href: "/admin/dashboard", label: "Admin" }]
+    me.role === "admin" && !CLINICAL && audience !== "patient" ? NAV.admin
+    : audience === "staff" && me.role === "admin" ? [...base, { href: "/admin/dashboard", label: "Admin" }]
     : audience === "patient" && me.role !== "patient" ? [...base, { href: "/staff/dashboard", label: "Staff portal" }]
     : base;
   // Some tabs only make sense for certain roles (the server enforces this too).
@@ -203,7 +207,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
     : [...GROUPS.map(([g, hrefs]) => [g, visible.filter((l) => hrefs.includes(l.href))] as [string, readonly NavItem[]]),
        ["More", visible.filter((l) => !GROUPS.some(([, h]) => h.includes(l.href)))] as [string, readonly NavItem[]]].filter(([, items]) => items.length > 0);
   const initials = `${me.firstName?.[0] ?? ""}${me.lastName?.[0] ?? ""}`.toUpperCase();
-  const areaLabel = audience === "admin" ? "Admin" : audience === "staff" ? "Staff portal" : "My health";
+  const areaLabel = audience === "admin" || (me.role === "admin" && audience !== "patient") ? "Admin" : audience === "staff" ? "Staff portal" : "My health";
 
   return (
     <MeContext.Provider value={me}>
