@@ -27,7 +27,7 @@ export default function PublicNav() {
     <header className="sticky top-0 z-50" style={{ background: "var(--navy)" }}>
       <div className="flex items-center justify-between px-6 h-16 max-w-7xl mx-auto">
         <Link href="/" className="flex items-center gap-3" onClick={() => setOpen(false)}>
-          <LogoMark size={36} />
+          <LogoMark size={42} tone="light" />
           <div>
             <div className="text-white font-bold text-base leading-tight">{HOSPITAL.name}</div>
             <div className="text-xs leading-tight" style={{ color: "var(--teal)", letterSpacing: "1px" }}>KISUMU, KENYA</div>

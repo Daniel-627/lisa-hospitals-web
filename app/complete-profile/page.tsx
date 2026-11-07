@@ -1,5 +1,6 @@
 "use client";
 
+import { LogoMark } from "@/components/ui";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@clerk/nextjs";
@@ -60,12 +61,7 @@ export default function CompleteProfilePage() {
     <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--navy)" }}>
       <div className="w-full max-w-md p-8 rounded-xl" style={{ background: "var(--surface)" }}>
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-full mb-3" style={{ background: "var(--teal)" }}>
-            <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <rect x="8" y="1" width="4" height="18" rx="2" fill="white" />
-              <rect x="1" y="8" width="18" height="4" rx="2" fill="white" />
-            </svg>
-          </div>
+          <div className="flex justify-center mb-3"><LogoMark size={56} /></div>
           <h1 className="text-2xl font-bold" style={{ color: "var(--navy)", fontFamily: "var(--font-display)" }}>
             Complete Your Profile
           </h1>

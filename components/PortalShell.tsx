@@ -220,7 +220,7 @@ export default function PortalShell({ audience, title, subtitle, children }: Pro
           style={{ background: "var(--surface)", borderColor: "var(--grey-200)" }} aria-label="Portal menu"
         >
           <div className="h-[72px] px-5 flex items-center gap-3 border-b shrink-0" style={{ borderColor: "var(--grey-200)" }}>
-            <LogoMark />
+            <LogoMark size={40} />
             <div className="leading-tight">
               <div className="font-semibold text-[15px]" style={{ color: "var(--navy)" }}>Lisa Hospitals</div>
               <div className="text-xs" style={{ color: "var(--grey-500)" }}>{areaLabel}</div>

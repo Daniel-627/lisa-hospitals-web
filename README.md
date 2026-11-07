@@ -137,7 +137,8 @@ After sign-in a patient lands on **My visits**: upcoming bookings and full histo
 - The portal uses a TailAdmin-style layout (white sidebar, 72px header, rounded cards) scoped to the `.portal` class so the public site keeps its own look.
 - All colours are CSS variables (`--navy`, `--teal`, `--grey-*`, `--surface`, `--page`). **Dark mode** is the `.portal.dark` class, which only swaps the variables. The choice is remembered in the browser (`localStorage` key `lh-theme`).
 - Use the tokens (`var(--surface)` rather than white, `var(--navy)` for text) in new components so dark mode works automatically.
-- Brand: teal `#00969A`, navy `#0B2545`.
+- Brand: site accent teal `#00969A` and navy `#0B2545`; the logo itself is navy `#262a62` and blue `#23a8e0`.
+- **Logo:** one source, `lib/brand.ts` (paths) rendered by `components/Logo.tsx` (`tone="color"` on light backgrounds, `tone="light"` on dark ones; in portal dark mode the figure turns white by itself). Files for other uses are in `public/brand/` (SVG and PNG, colour / on-dark / black / white, mark and horizontal lockup) and `public/icons/` (192, 512, maskable). Tab icon: `app/icon.svg` + `app/favicon.ico`; iPhone: `app/apple-icon.png`; install icon: `app/manifest.ts`; social share card: `lib/ogCard.tsx`.
 - Printing: the sidebar and header carry `no-print`; the day list and receipts print as plain pages.
 
 ## 13. Languages

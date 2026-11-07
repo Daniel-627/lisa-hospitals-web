@@ -54,6 +54,7 @@ export function hospitalJsonLd() {
     slogan: HOSPITAL.tagline,
     url: SITE_URL,
     image: abs("/opengraph-image"),
+    logo: abs("/brand/lisa-mark-512.png"),
     description: DEFAULT_DESCRIPTION,
     telephone: phoneIntl,
     email: HOSPITAL.email,

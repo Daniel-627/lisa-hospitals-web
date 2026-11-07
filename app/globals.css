@@ -83,3 +83,4 @@ body {
 .portal.dark main .border.rounded-xl, .portal.dark main div.p-5.rounded-xl { box-shadow: none; }
 .portal.dark :is(input, select, textarea) { color: var(--navy); background-color: var(--surface); }
 .portal.dark .hover\:bg-gray-50:hover { background: var(--grey-100); }
+.portal.dark .logo-figure { fill: #ffffff; }

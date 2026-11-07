@@ -1,18 +1,13 @@
+import Logo from "@/components/Logo";
 import type { CSSProperties, ReactNode } from "react";
 import { urgencyInfo } from "@/lib/format";
 
 export const inputCls = "w-full px-4 py-3 rounded-lg border text-sm outline-none";
 export const inputStyle: CSSProperties = { borderColor: "var(--grey-200)", color: "var(--navy)", background: "var(--surface)" };
 
-export function LogoMark({ size = 32 }: { size?: number }) {
-  return (
-    <div className="rounded-full flex items-center justify-center shrink-0" style={{ width: size, height: size, background: "var(--teal)" }}>
-      <svg width={size * 0.44} height={size * 0.44} viewBox="0 0 20 20" fill="none" aria-hidden>
-        <rect x="8" y="1" width="4" height="18" rx="2" fill="white" />
-        <rect x="1" y="8" width="18" height="4" rx="2" fill="white" />
-      </svg>
-    </div>
-  );
+/** The hospital's mark. `size` is its height in px; use tone="light" on dark backgrounds. */
+export function LogoMark({ size = 32, tone = "color" }: { size?: number; tone?: "color" | "light" }) {
+  return <Logo height={size} tone={tone} />;
 }
 
 export function Spinner({ label = "Loading..." }: { label?: string }) {

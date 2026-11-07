@@ -2,6 +2,7 @@ import Link from "next/link";
 import { HOSPITAL } from "@/lib/hospital";
 import { DEPARTMENTS, toUrlSlug } from "@/lib/departments";
 import { Next } from "@/components/Icon";
+import Logo from "@/components/Logo";
 
 const col = "text-xs font-bold tracking-widest uppercase mb-4";
 const link = "text-xs hover:underline";
@@ -11,6 +12,7 @@ export default function PublicFooter() {
     <footer className="px-6 py-12" style={{ background: "#061624" }}>
       <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
+          <div className="mb-4"><Logo height={56} tone="light" title={HOSPITAL.name} /></div>
           <div className="font-bold text-white mb-1" style={{ fontFamily: "var(--font-display)", fontSize: "18px" }}>{HOSPITAL.name}</div>
           <div className="text-xs mb-3 tracking-widest" style={{ color: "var(--teal)" }}>{HOSPITAL.tagline.toUpperCase()}</div>
           <p className="text-xs leading-relaxed" style={{ color: "rgba(255,255,255,0.4)" }}>
